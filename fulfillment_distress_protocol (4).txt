@@ -1,0 +1,122 @@
+
+FULFILLMENT DISTRESS
+ANALYSIS PROTOCOL
+
+A step-by-step protocol for Customer Success Managers to analyze which distress signals were active on properties delivered to a client that subsequently sold — and translate those findings into actionable recommendations.
+
+FieldValueDocument typeInternal CSM ProtocolDepartmentCustomer SuccessApplies toAll active clients with fulfillment delivery historyMinimum data requirement6 months recommended · ?6 months: 8020REI platform · >6 months: AWS Athena · 3-month gap appliedReport outputHTML report (4 pages + annex), Slack summaryVersion1.0 — March 2026
+
+1. Purpose of This Analysis
+Why this report exists and what it answers for the client.
+
+The Fulfillment Distress Analysis is a retrospective review that answers a specific and important client question:
+
+The Core Question
+Of the properties we delivered to this client that were subsequently sold to another buyer, what distress signals were active on those properties at the moment we first shared them?
+Why This Matters for the Client
+Clients receive monthly fulfillment lists containing thousands of distressed properties. Not all distress signals are equally predictive of an imminent sale. This analysis surfaces which signals — at the time of delivery — were most commonly present on properties that actually transacted. This gives the client a data-driven basis to:
+
+– Prioritize outreach to properties with the strongest predictive signals first
+– Adjust their BuyBox configuration to weight toward signals that correlate with transactions in their specific markets
+– Understand the competitive landscape — how many of those sales went to investor entities vs. individual buyers
+– Make informed decisions about additional 8020REI features (Niche Lists, Rapid Response) that can increase their speed-to-contact
+
+What This Report Is Not
+This is not a conversion report. The properties identified were sold to other buyers — not to the client. The purpose is not to measure how many deals the client closed, but to understand the distress profile of properties in their market that were actively transacting, in order to sharpen future targeting.
+
+Important framing for client conversations
+High Equity and Absentee Owner tend to appear most frequently in this analysis because they are the largest distress segments in most markets. This is expected behavior, not a signal to focus exclusively on those two. Use the findings as a starting point and layer in lower-volume, higher-urgency distresses (Pre-Foreclosure, Divorce, Judgment) for a more targeted approach.
+
+2. Data Requirements
+What you need before starting the analysis.
+
+2.1 Minimum Time Window
+The standard analysis window is 6 months. To account for the time clients need to run marketing, the typical timeline for a property to close, and the lag in county recording (1–30 days post-closing), the window ends 3 months before the report request date. For a report requested in March, the analysis covers October, November, and December. For June, it covers January through March. The client may request a different window; honor it and document it. The table below defines how to handle each scenario:
+
+ScenarioWindowGuidanceStandard6 months ending 3 months before request dateDefault for all active clients. Apply the 3-month gap rule. Communicate the window to the client before extraction.Client-definedAs requested by clientHonor the client’s preference. Document the agreed start and end dates in the client’s context.md before proceeding.New clientAll available dataRun the analysis with all available data from the account start date. Set expectations with the client that findings will deepen over time as transaction history accumulates — the 3-month gap and county recording lag mean early reports capture a narrower window. Schedule the first full 6-month analysis accordingly.
+2.2 Required Data Files
+The analysis is built from two source files. Where the data is extracted from depends on the length of the analysis window:
+
+6 months or fewer: Extract directly from the Fulfillment History in the 8020REI platform (client’s domain). The data can be pulled and exported as a workbook from the client’s fulfillment records.
+More than 6 months: Extract from AWS Athena. Request the data team to run the appropriate query against the Athena database for the agreed time window.
+
+FileContentsKey columnsHistorical Distress DataHistorical distress flags per property per period, with buyer/seller names and sale date. Extracted from AWS Athena (>6 months) or from the 8020REI platform’s fulfillment history (?6 months). One row per property per month.PropertyID, Period, SaleDate, CurrentBuyer1/2, distress columns (value: 1=active, 0=was active, blank=never)Fulfillment RecommendationsThe properties previously recommended to the client through the fulfillment list. Cross-referenced against the Historical Distress Data to identify which recommended properties were subsequently sold to another buyer during the analysis window.PROPERTY ID (key for cross-reference), COUNTY, ADDRESS, MARKETING FIRST RECOMMENDATION, LAST SALE DATE
+2.3 Distress Value Encoding
+Distress columns use a three-value encoding. It is critical to apply this correctly when determining which signals were active at the time of delivery:
+
+ValueMeaning1Distress was ACTIVE at that specific period. Count this as an active signal.0Distress was active at some point in the past, but is no longer active. Do NOT count as currently active.BlankDistress has never been flagged for this property. Do not count.
+Rule
+Only count a distress signal as active if its value is 1 in the period matching the Marketing First Recommendation date. This ensures you are capturing what the client saw, not historical or resolved signals.
+2.4 Handling Multiple Counties (FIPS)
+The number of counties (FIPS) in the client's BuyBox directly affects how the report is structured. The guiding principle is to preserve a single, coherent narrative: one report tells one story. When county count grows, the structure adapts to keep the report readable without fragmenting the findings into separate documents that force the client to synthesize across files.
+
+Use the following tiering to determine report structure before starting the analysis:
+
+CountiesReport structureGuidance2–3Standard (4 pages + annex)No change to standard structure. Side-by-side county comparison chart on Page 3 works cleanly at this scale. Annex lists all properties sorted by county.4–6One report, adapted Page 3Keep all findings in one report. Replace the side-by-side county bar chart with a ranked summary table showing each county’s top 3 signals and matched property count. The overall signal analysis (Page 2) remains unchanged. In the annex, group properties by county with a sub-header per FIPS.7+Portfolio report + county briefsProduce one 4-page portfolio report with all properties combined, followed by a one-page county brief per FIPS as numbered appendix sections. Each county brief contains: total matched properties, top 3 active signals, and a compact property table. The client reads the portfolio report for the strategic picture and references individual county briefs as needed.
+Principle: one report, one story.
+Never produce completely separate full reports per county. Doing so fragments the strategic narrative, multiplies production effort, and shifts the synthesis burden onto the client. The report structure should adapt to the county count — not be replaced by it.
+2.5 Distress Overview
+Before running the analysis, pull the Distress Overview for the client’s active counties from the 8020REI domain homepage. This view shows the total number of properties flagged for each distress signal across the client’s market, broken down by county.
+
+Where to find it
+Log into the client’s 8020REI domain. The Distress Overview is visible on the homepage under the market summary. It lists each distress type with its current property count per county. Take a screenshot or record the counts — this data is used in the report to contextualize the analysis findings.
+The Distress Overview serves two purposes in this analysis:
+
+– Contextualization: signals that dominate the sold-property list may simply be the largest segments in the universe. Showing the total count for each signal (e.g., High Equity: 245K, Absentee: 46K) explains why those signals lead — and why that alone is not a reason to focus on them exclusively.
+– Proportional significance: low-volume distresses (e.g., Judgment: ~260, Divorce: ~500) carry more weight when they appear on sold properties precisely because the universe is small. The Distress Overview makes this comparison concrete and credible.
+
+The Distress Overview data is included as a dedicated section in the client report. It sits alongside the analysis findings so the client can see the full market context — not just which signals appeared on sold properties, but how common or rare each signal is across the entire platform.
+
+
+3. Step-by-Step Process
+Follow these four steps in order. Each step covers what to do and what to watch for.
+
+1Confirm the analysis window and apply the 3-month gap rule
+Before pulling any data, confirm the time window with the client. The default is 6 months ending 3 months before the report request date. Communicate this clearly: the gap exists to account for marketing lead time, the sales cycle, and county recording lag.
+– Tell the client: ‘The standard window covers the 6 months ending 3 months before today’s date. For a report in March, this means October–December. We can adjust this if you prefer a different range.’
+– For new clients with limited history: run with all available data. Do not frame this as a limitation in the client-facing report — set expectations in the CSM conversation instead.
+– Document the agreed start and end dates in the client’s context.md before proceeding.2Extract the two source datasets — 8020REI platform (?6 months) or AWS Athena (>6 months)
+If the analysis window is 6 months or fewer, pull the data directly from the Fulfillment History in the 8020REI platform (client’s domain). If the window exceeds 6 months, request the data team to extract from AWS Athena. Both sources produce the same two-dataset structure.
+– Confirm the PropertyID column is present in both datasets — this is the cross-reference key.
+– Verify the Period column in the Historical Distress Data covers the agreed window.
+– Confirm the Marketing First Recommendation date is populated for all matched properties in the Fulfillment Recommendations dataset.
+Note: If Marketing First Recommendation dates are missing for some properties, flag these separately — they cannot be accurately analyzed without knowing when the property was first shared.3Process and consolidate the data
+Before running any analysis, consolidate all fulfillment exports into a single working file and cross-reference it against the historical distress data. A Python script is used to append all fulfillment files into one unified dataset for analysis.
+– Use the Python consolidation script to append all individual fulfillment exports into one file. This ensures the full history is in a single place for the analysis.
+– Cross-reference the consolidated fulfillment data against the historical distress source — either the AWS Athena extract or the COO template export from the 8020REI domains, depending on the window length.
+– Check all distress columns across the combined dataset. Verify the sale date is present and correct for each matched property.
+– Confirm the Marketing First Recommendation date is populated for all matched properties — this is the anchor for identifying which distress signals were active at the time of delivery.4Run the analysis and produce the report
+With the consolidated and cross-referenced dataset ready, run the full analysis across all distress signals, buyer types, counties, and time periods. Once complete, build the client report using 8020REI skills.
+– Count active distress signals (value = 1) across all matched properties. Calculate percentages, break down by county (FIPS) and by sale month, and split by buyer type (entity vs. individual).
+– Pull the Distress Overview from the client’s 8020REI domain homepage to get total segment sizes for each active distress. This contextualizes the findings — high-volume signals dominate because they are the largest segments in the platform, not because they are uniquely predictive.
+– Low-volume distresses (Pre-Foreclosure, Divorce, Judgment) appearing on sold properties carry proportionally more weight. Flag these in the analysis.
+– Using 8020REI skills, build the report with all findings, signal breakdowns, buyer analysis, and recommendations. The report includes the Distress Overview as a reference section so the client can see the full universe context alongside the sold-property findings.
+
+4. Standard Recommendations Framework
+The two standing recommendations to include in every Fulfillment Distress Analysis, regardless of client.
+
+4.1 Rapid Response
+Always recommend Rapid Response as a parallel outreach channel. Frame it as the direct answer to the speed-to-contact problem identified in every analysis: properties are moving before clients can act on them through the monthly delivery cycle alone. Rapid Response adds a simultaneous channel without replacing existing outreach, and does not require changes to the client's current workflow.
+
+4.2 Repeat Analysis in 6 Months
+Always schedule and communicate the repeat analysis. One dataset is an observation. Two datasets are a pattern. The 6-month repeat allows the CSM to confirm whether signals hold, identify drift, and update the client's BuyBox configuration with evidence.
+
+4.3 Conditional: Niche Lists
+If the client has additional resources (Virtual Assistant capacity, budget for additional outreach), recommend two Niche List tracks:
+
+– Track A — High Equity + Absentee Owner: large pool, validated signal. Have the VA work this list with consistent outreach frequency.
+– Track B — Divorce + Pre-Foreclosure: low coverage in the universe = low investor competition. Smaller list, higher urgency sellers, fewer competing offers.
+
+This recommendation is conditional on client capacity. Do not recommend it if the client is already stretched on outreach resources.
+5. Notes & Edge Cases
+
+Fewer than 20 matched properties
+If the matched property count is very low (under 20), do not make strong signal claims. Present the data descriptively. Recommend running the analysis again after more data accumulates.
+
+Data provider lag
+County transaction records typically post 1–30 days after closing. This means properties that sold near the end of a month often appear in the following delivery batch. This is structural and affects all clients equally. Do not flag this as a platform issue in client communications — it is a public records limitation. The 3-month gap rule in Section 2.1 is specifically designed to account for this.
+
+Client starts mid-year
+For new clients with fewer than 6 months of history, use all available data. Frame findings as an early read that will deepen over time as transaction history accumulates. Do not present a limitation in the client-facing report — set expectations in the CSM conversation instead. Always schedule the full 6-month analysis from the client’s account start date, not from the date of the first report.
+8020REIInternal Protocol — Confidential
+Fulfillment Distress Analysis — CSM ProtocolPage 1

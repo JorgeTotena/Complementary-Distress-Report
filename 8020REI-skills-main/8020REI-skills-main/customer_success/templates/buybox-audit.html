@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BuyBox Audit — 8020REI</title>
+
+  <!--
+    ============================================================================
+    8020REI BUYBOX AUDIT TEMPLATE
+    ============================================================================
+
+    PURPOSE:
+    Quarterly review of a client's targeting criteria (BuyBox) effectiveness.
+    This template follows the Pyramid Principle (Minto). Every page leads with
+    the conclusion first, then supports it with data. CSMs should fill in every
+    placeholder marked with [SQUARE BRACKETS AND CAPITAL INSTRUCTIONS] before
+    generating the final report or walking into the call.
+
+    HOW TO USE:
+    1. Open this file in a text editor (VS Code, etc.)
+    2. Search for "[" to find every placeholder
+    3. Replace each placeholder with real content
+    4. Open in a browser or print to PDF (Cmd+P / Ctrl+P)
+
+    PYRAMID PRINCIPLE REMINDER:
+    - Start with the answer (the "so what")
+    - Group supporting arguments logically
+    - Order from most important to least important
+    ============================================================================
+  -->
+
+  <style>
+    /* ======================================================================
+       8020REI REPORT CSS FRAMEWORK
+       Design System: McKinsey-style consulting report
+       No rounded corners. No shadows. No gradients.
+       Clean, authoritative, data-driven.
+       ====================================================================== */
+
+    /* --- RESET & BASE --- */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #1a1a1a;
+      background: #ffffff;
+      line-height: 1.6;
+    }
+
+    /* --- TYPOGRAPHY --- */
+    h1, h2, h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: 1.125rem;
+    }
+
+    p, li, td, th {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.9375rem;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    /* --- PAGE STRUCTURE --- */
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      max-height: 11in;
+      margin: 0 auto;
+      padding: 48px 56px;
+      page-break-after: always;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    /* On screen, separate pages visually */
+    @media screen {
+      .page {
+        border: 1px solid #d4d4d4;
+        margin-bottom: 24px;
+      }
+    }
+
+    /* --- SECTION LABEL --- */
+    /* The small uppercase label above the main title (e.g., "PERFORMANCE") */
+    .section-label {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #0B5394;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* --- ACTION TITLE --- */
+    /* The single-sentence conclusion that leads the section (Pyramid Principle) */
+    .action-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.35;
+      margin-bottom: 28px;
+      border-bottom: 2px solid #0B5394;
+      padding-bottom: 12px;
+    }
+
+    /* --- KPI CARDS --- */
+    .kpi-row {
+      display: flex;
+      gap: 0;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      flex: 1;
+      padding: 20px 24px;
+      border: 1px solid #d4d4d4;
+      border-right: none;
+      text-align: center;
+    }
+
+    .kpi-card:last-child {
+      border-right: 1px solid #d4d4d4;
+    }
+
+    .kpi-label {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #666666;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0B5394;
+      line-height: 1.1;
+    }
+
+    .kpi-context {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.75rem;
+      color: #666666;
+      margin-top: 4px;
+    }
+
+    /* --- INSIGHT BOX --- */
+    /* Used for the "so what" interpretation of data */
+    .insight-box {
+      background: #E8F0FE;
+      border-left: 3px solid #0B5394;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+
+    .insight-box p {
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+
+    .insight-box strong {
+      font-weight: 700;
+    }
+
+    /* --- TWO-COLUMN LAYOUT --- */
+    .two-col {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    .two-col .col {
+      flex: 1;
+    }
+
+    .col h3 {
+      font-size: 1rem;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    /* --- LISTS --- */
+    ul.bullet-list, ol.step-list {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    ul.bullet-list li, ol.step-list li {
+      margin-bottom: 10px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+
+    ol.step-list li {
+      padding-left: 4px;
+    }
+
+    /* --- NEXT STEPS TABLE --- */
+    .next-steps-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .next-steps-table th {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #666666;
+      text-align: left;
+      padding: 6px 0;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    .next-steps-table td {
+      font-size: 0.875rem;
+      padding: 8px 8px 8px 0;
+      border-bottom: 1px solid #ebebeb;
+      vertical-align: top;
+    }
+
+    /* --- COVER PAGE --- */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 0;
+    }
+
+    .cover-logo {
+      margin-bottom: 64px;
+    }
+
+    .cover-logo img {
+      height: 56px;
+      display: block;
+    }
+
+    .cover-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .cover-subtitle {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 1.0625rem;
+      color: #666666;
+      margin-bottom: 48px;
+      line-height: 1.5;
+    }
+
+    .cover-confidential {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #999999;
+      border-top: 1px solid #d4d4d4;
+      padding-top: 16px;
+      display: inline-block;
+    }
+
+    .cover-divider {
+      width: 64px;
+      height: 3px;
+      background: #0B5394;
+      margin-bottom: 32px;
+    }
+
+    /* --- PAGE FOOTER --- */
+    .page-footer {
+      position: absolute;
+      bottom: 36px;
+      left: 56px;
+      right: 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.625rem;
+      color: #999999;
+      letter-spacing: 0.05em;
+      border-top: 1px solid #d4d4d4;
+      padding-top: 10px;
+    }
+
+    .page-footer span {
+      font-size: 0.625rem;
+      color: #999999;
+    }
+
+    .page-footer a {
+      color: #999999;
+      text-decoration: none;
+    }
+
+    .page-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* --- PLACEHOLDER STYLING --- */
+    /* Makes unfilled placeholders visible during editing */
+    .placeholder {
+      color: #0B5394;
+      background: #E8F0FE;
+      padding: 1px 4px;
+      font-weight: 600;
+    }
+
+    /* --- DOWNLOAD BUTTON --- */
+    .download-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 10px 20px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: #0B5394;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background: #094075;
+    }
+
+    @page {
+      margin: 0;
+      size: 8.5in 11in;
+    }
+
+    /* --- PRINT STYLES --- */
+    @media print {
+      body {
+        background: none;
+      }
+
+      .page {
+        width: 8.5in;
+        height: 11in;
+        max-height: 11in;
+        margin: 0;
+        padding: 48px 56px;
+        border: none;
+        overflow: hidden;
+        page-break-inside: avoid;
+      }
+
+      .page-footer {
+        position: fixed;
+        bottom: 24px;
+      }
+
+      .download-btn { display: none; }
+    }
+
+    /* --- PAGE HEADER (interior pages) --- */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    .page-header img {
+      height: 20px;
+    }
+
+    .page-header .placeholder {
+      font-size: 0.75rem;
+    }
+
+    /* --- SUB-SECTION HEADER --- */
+    .sub-section-header {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+  </style>
+</head>
+<body>
+
+<button class="download-btn" onclick="window.print()">&#8595; Download PDF</button>
+
+  <!-- ====================================================================
+       PAGE 1 — COVER
+       ====================================================================
+       The cover establishes who this BuyBox audit is for, who prepared it,
+       and when. The client name and audit type should be prominent.
+       ==================================================================== -->
+  <section class="page cover">
+
+    <div class="cover-logo">
+      <!--
+        Logo path is relative to this template's location in /templates/.
+        If you move this file, update the path accordingly.
+      -->
+      <img src="../logos/logo-full-light.png" alt="8020REI">
+    </div>
+
+    <div class="cover-divider"></div>
+
+    <!--
+      COVER TITLE:
+      State the single most important conclusion about BuyBox performance.
+      The title should tell the reader the answer, not label the document.
+
+      GOOD: "BuyBox is generating strong volume but conversion dropped 15% — narrowing county coverage should restore ROI"
+      BAD:  "Acme Corp — BuyBox Audit" (this is a label, not a conclusion)
+    -->
+    <h1 class="cover-title">
+      <span class="placeholder">[State the single most important conclusion about BuyBox performance — e.g., "BuyBox conversion dropped 15% — narrowing county coverage and adding probate signals should restore ROI"]</span>
+    </h1>
+
+    <!--
+      COVER SUBTITLE:
+      Client name, report type, period, and preparer.
+    -->
+    <p class="cover-subtitle">
+      <span class="placeholder">[Client Name]</span> · BuyBox Audit · <span class="placeholder">[Quarter Year]</span> · Prepared by <span class="placeholder">[CSM Name]</span>
+    </p>
+
+    <div class="cover-confidential">Confidential</div>
+
+    <footer class="page-footer">
+      <span><a href="https://booking.8020rei.com">8020rei.com</a></span>
+      <span>Confidential</span>
+      <span>Page 1</span>
+    </footer>
+  </section>
+
+
+  <!-- ====================================================================
+       PAGE 2 — PERFORMANCE
+       ====================================================================
+       PYRAMID PRINCIPLE — PERFORMANCE:
+       This page answers "How is the current BuyBox performing?" Lead with a
+       single-sentence conclusion (the Action Title) that tells the reader
+       the most important thing about this client's targeting criteria
+       effectiveness. Then support it with KPI data and the current BuyBox
+       configuration.
+
+       The reader should be able to read ONLY the Action Title and understand
+       the overall BuyBox performance. The KPIs and table provide evidence.
+       ==================================================================== -->
+  <section class="page">
+
+    <div class="page-header">
+      <img src="../logos/logo-icon-light.png" alt="8020REI" style="height: 20px;">
+      <span class="placeholder">[Date]</span>
+    </div>
+
+    <span class="section-label">Performance</span>
+
+    <!--
+      ACTION TITLE (Pyramid Principle — the governing thought):
+      This is the SINGLE MOST IMPORTANT sentence on this page.
+      It should be a complete, declarative sentence that states
+      the conclusion about how the client's BuyBox is performing.
+
+      GOOD: "The current BuyBox is generating strong lead volume but
+             conversion rate has dropped 15% due to overly broad county targeting."
+      BAD:  "BuyBox performance overview" (this is a label, not a conclusion)
+
+      Fill this in BEFORE the call — it forces you to form a point of view.
+    -->
+    <div class="action-title">
+      <span class="placeholder">[One-sentence conclusion about the BuyBox's overall performance this quarter — FILL THIS IN BEFORE THE CALL]</span>
+    </div>
+
+    <!--
+      KPI CARDS:
+      Four key metrics that measure BuyBox targeting effectiveness.
+      Each metric should directly relate to the conclusion you stated.
+      If a metric doesn't support the story, replace the context line
+      to frame it appropriately.
+    -->
+    <div class="kpi-row">
+
+      <!--
+        KPI 1: Conversion Rate
+        The percentage of leads generated by this BuyBox that converted
+        into closed deals. Replace value and context with actuals.
+      -->
+      <div class="kpi-card">
+        <div class="kpi-label">Conversion Rate</div>
+        <div class="kpi-value"><span class="placeholder">[##%]</span></div>
+        <div class="kpi-context"><span class="placeholder">[vs. ##% last quarter]</span></div>
+      </div>
+
+      <!--
+        KPI 2: Cost Per Deal
+        Average cost for each deal closed from leads matching this BuyBox.
+        Context should show trend direction.
+      -->
+      <div class="kpi-card">
+        <div class="kpi-label">Cost Per Deal</div>
+        <div class="kpi-value"><span class="placeholder">[$X,XXX]</span></div>
+        <div class="kpi-context"><span class="placeholder">[+/- $X vs. last quarter]</span></div>
+      </div>
+
+      <!--
+        KPI 3: Lead Volume
+        Total number of leads generated that matched BuyBox criteria
+        during this audit period.
+      -->
+      <div class="kpi-card">
+        <div class="kpi-label">Lead Volume</div>
+        <div class="kpi-value"><span class="placeholder">[###]</span></div>
+        <div class="kpi-context"><span class="placeholder">[+/- N from last quarter]</span></div>
+      </div>
+
+      <!--
+        KPI 4: Feedback Loop Submissions
+        Number of feedback loop entries the client submitted this quarter.
+        Low submissions indicate the client is not actively refining criteria.
+      -->
+      <div class="kpi-card">
+        <div class="kpi-label">Feedback Loop</div>
+        <div class="kpi-value"><span class="placeholder">[##]</span></div>
+        <div class="kpi-context"><span class="placeholder">[submissions this quarter]</span></div>
+      </div>
+
+    </div>
+
+    <!--
+      INSIGHT BOX:
+      This is the "so what" of the KPI data above. Don't just restate the
+      numbers — interpret them. What do these four metrics MEAN when read
+      together? What pattern emerges about BuyBox effectiveness?
+
+      GOOD: "Conversion rate declined while lead volume increased, suggesting
+             the BuyBox is casting too wide a net. Tightening distress signals
+             and narrowing to top-performing counties should improve ROI."
+      BAD:  "Conversion rate is 8%, cost per deal is $2,400." (Just restating.)
+    -->
+    <div class="insight-box">
+      <p><strong>Key Takeaway:</strong> <span class="placeholder">[What do these metrics reveal about BuyBox effectiveness? What is the pattern? FILL THIS IN.]</span></p>
+    </div>
+
+    <!--
+      CURRENT BUYBOX SUMMARY:
+      A snapshot of the client's current BuyBox configuration. This table
+      lets the client and CSM see all targeting parameters in one place,
+      with performance notes that connect each setting to results.
+    -->
+    <h3 class="sub-section-header">Current BuyBox Summary</h3>
+
+    <table class="next-steps-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Current Setting</th>
+          <th>Performance Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!--
+          PRICE RANGE:
+          The min/max property price the client is targeting.
+          Note whether this range is producing quality leads.
+        -->
+        <tr>
+          <td>Price Range</td>
+          <td><span class="placeholder">[e.g., $50K–$250K]</span></td>
+          <td><span class="placeholder">[e.g., 80% of deals close within $75K–$180K range]</span></td>
+        </tr>
+        <!--
+          PROPERTY TYPE:
+          The property types included (SFR, multi-family, etc.).
+          Note which types are converting best.
+        -->
+        <tr>
+          <td>Property Type</td>
+          <td><span class="placeholder">[e.g., SFR, Duplex]</span></td>
+          <td><span class="placeholder">[e.g., SFR accounts for 90% of conversions]</span></td>
+        </tr>
+        <!--
+          COUNTIES:
+          Which counties/markets are currently active.
+          Note top and bottom performers.
+        -->
+        <tr>
+          <td>Counties</td>
+          <td><span class="placeholder">[e.g., Harris, Dallas, Tarrant]</span></td>
+          <td><span class="placeholder">[e.g., Harris converting at 12%; Tarrant underperforming at 2%]</span></td>
+        </tr>
+        <!--
+          DISTRESS SIGNALS:
+          Which distress indicators are active (pre-foreclosure, probate, etc.).
+          Note which signals correlate with higher conversion.
+        -->
+        <tr>
+          <td>Distress Signals</td>
+          <td><span class="placeholder">[e.g., Pre-foreclosure, Probate, Tax Lien]</span></td>
+          <td><span class="placeholder">[e.g., Probate leads convert 2x higher than tax lien]</span></td>
+        </tr>
+        <!--
+          EXCLUSIONS:
+          What the BuyBox explicitly filters out.
+          Note if any exclusions may be too aggressive.
+        -->
+        <tr>
+          <td>Exclusions</td>
+          <td><span class="placeholder">[e.g., Condos, lots > 5 acres, corporate-owned]</span></td>
+          <td><span class="placeholder">[e.g., Exclusions are appropriate — no missed opportunities identified]</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer class="page-footer">
+      <span><a href="https://booking.8020rei.com">8020rei.com</a></span>
+      <span>Confidential</span>
+      <span>Page 2</span>
+    </footer>
+  </section>
+
+
+  <!-- ====================================================================
+       PAGE 3 — RECOMMENDATION
+       ====================================================================
+       PYRAMID PRINCIPLE — RECOMMENDATION:
+       This page answers "What should we change in the BuyBox?" Lead with
+       the answer. The Action Title should state the recommendation as a
+       clear, direct sentence. The recommended changes and next steps
+       provide the supporting structure.
+
+       The reader should be able to read ONLY the Action Title and know
+       exactly what BuyBox adjustments you are recommending.
+       ==================================================================== -->
+  <section class="page">
+
+    <div class="page-header">
+      <img src="../logos/logo-icon-light.png" alt="8020REI" style="height: 20px;">
+      <span class="placeholder">[Date]</span>
+    </div>
+
+    <span class="section-label">Recommendation</span>
+
+    <!--
+      ACTION TITLE (Pyramid Principle — the governing thought):
+      State your BuyBox recommendation in one sentence. Be specific.
+
+      GOOD: "We recommend narrowing county coverage from 5 to 3 and adding
+             probate as a primary distress signal to improve conversion by ~20%."
+      BAD:  "BuyBox changes and next steps" (label, not a recommendation)
+      BAD:  "We should optimize the BuyBox" (vague, not actionable)
+    -->
+    <div class="action-title">
+      <span class="placeholder">[What specific BuyBox changes are you recommending and why? FILL THIS IN.]</span>
+    </div>
+
+    <div class="two-col">
+
+      <!--
+        LEFT COLUMN — RECOMMENDED CHANGES:
+        These are the specific BuyBox modifications you are proposing,
+        explained as numbered steps with rationale. Each change should
+        tie back to the performance data from Page 2. Lead with the
+        highest-impact change first (Pyramid Principle).
+      -->
+      <div class="col">
+        <h3>Recommended Changes</h3>
+        <ol class="step-list">
+          <!--
+            Each step should name the change AND explain why based on data.
+
+            GOOD: "Remove Tarrant County — it has produced 45 leads but
+                   zero conversions over two quarters, driving up cost per deal."
+            BAD:  "Change some counties"
+          -->
+          <li><span class="placeholder">[CHANGE 1 — Highest-impact BuyBox adjustment. State what to change and cite the performance data that supports it.]</span></li>
+          <li><span class="placeholder">[CHANGE 2 — Second BuyBox adjustment. What parameter should change and what improvement do you expect?]</span></li>
+          <li><span class="placeholder">[CHANGE 3 — Third BuyBox adjustment or a refinement to monitor. Include the rationale.]</span></li>
+        </ol>
+      </div>
+
+      <!--
+        RIGHT COLUMN — NEXT STEPS:
+        Concrete actions with owners and dates to implement the
+        recommended BuyBox changes. Every audit should end with
+        clear, assigned next steps.
+      -->
+      <div class="col">
+        <h3>Next Steps</h3>
+        <table class="next-steps-table">
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Owner</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!--
+              Fill in specific, verifiable actions. Each row should
+              pass the "how would I check if this was done?" test.
+
+              GOOD: "Update BuyBox to remove Tarrant County" / "CSM" / "Mar 20"
+              BAD:  "Make changes" / "Team" / "Soon"
+            -->
+            <tr>
+              <td><span class="placeholder">[ACTION 1 — Specific BuyBox update action]</span></td>
+              <td><span class="placeholder">[Owner]</span></td>
+              <td><span class="placeholder">[Date]</span></td>
+            </tr>
+            <tr>
+              <td><span class="placeholder">[ACTION 2 — Specific follow-up or monitoring action]</span></td>
+              <td><span class="placeholder">[Owner]</span></td>
+              <td><span class="placeholder">[Date]</span></td>
+            </tr>
+            <tr>
+              <td><span class="placeholder">[ACTION 3 — Specific review or check-in action]</span></td>
+              <td><span class="placeholder">[Owner]</span></td>
+              <td><span class="placeholder">[Date]</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!--
+      CLOSING INSIGHT BOX:
+      Remind the CSM and client that BuyBox changes should be reviewed
+      after sufficient data accumulates — typically 30-60 days. This
+      prevents premature re-adjustment and ensures changes have time
+      to produce measurable results.
+    -->
+    <div class="insight-box">
+      <p><strong>Reminder:</strong> Allow 30-60 days after implementing BuyBox changes before evaluating results. Schedule the next BuyBox review before this call ends and confirm the date on both calendars.</p>
+    </div>
+
+    <footer class="page-footer">
+      <span><a href="https://booking.8020rei.com">8020rei.com</a></span>
+      <span>Confidential</span>
+      <span>Page 3</span>
+    </footer>
+  </section>
+
+
+</body>
+</html>

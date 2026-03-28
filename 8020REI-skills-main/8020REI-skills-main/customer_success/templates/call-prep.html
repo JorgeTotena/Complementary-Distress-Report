@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Call Prep Worksheet — 8020REI</title>
+
+  <style>
+    /* ======================================================================
+       8020REI REPORT CSS FRAMEWORK
+       Design System: McKinsey-style consulting report
+       No rounded corners. No shadows. No gradients.
+       Clean, authoritative, data-driven.
+       ====================================================================== */
+
+    /* --- RESET & BASE --- */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #1a1a1a;
+      background: #ffffff;
+      line-height: 1.6;
+    }
+
+    /* --- TYPOGRAPHY --- */
+    h1, h2, h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: 1.125rem;
+    }
+
+    p, li, td, th {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.9375rem;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    /* --- PAGE STRUCTURE --- */
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      max-height: 11in;
+      margin: 0 auto;
+      padding: 48px 56px;
+      page-break-after: always;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    /* On screen, separate pages visually */
+    @media screen {
+      .page {
+        border: 1px solid #d4d4d4;
+        margin-bottom: 24px;
+      }
+    }
+
+    /* --- SECTION LABEL --- */
+    .section-label {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #0B5394;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* --- ACTION TITLE --- */
+    .action-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.35;
+      margin-bottom: 28px;
+      border-bottom: 2px solid #0B5394;
+      padding-bottom: 12px;
+    }
+
+    /* --- KPI CARDS --- */
+    .kpi-row {
+      display: flex;
+      gap: 0;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      flex: 1;
+      padding: 20px 24px;
+      border: 1px solid #d4d4d4;
+      border-right: none;
+      text-align: center;
+    }
+
+    .kpi-card:last-child {
+      border-right: 1px solid #d4d4d4;
+    }
+
+    .kpi-label {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #666666;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0B5394;
+      line-height: 1.1;
+    }
+
+    .kpi-context {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.75rem;
+      color: #666666;
+      margin-top: 4px;
+    }
+
+    /* --- INSIGHT BOX --- */
+    .insight-box {
+      background: #E8F0FE;
+      border-left: 3px solid #0B5394;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+
+    .insight-box p {
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+
+    .insight-box strong {
+      font-weight: 700;
+    }
+
+    /* --- TWO-COLUMN LAYOUT --- */
+    .two-col {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    .two-col .col {
+      flex: 1;
+    }
+
+    .col h3 {
+      font-size: 1rem;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    /* --- LISTS --- */
+    ul.bullet-list, ol.step-list {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    ul.bullet-list li, ol.step-list li {
+      margin-bottom: 10px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+
+    ol.step-list li {
+      padding-left: 4px;
+    }
+
+    /* --- NEXT STEPS TABLE --- */
+    .next-steps-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .next-steps-table th {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #666666;
+      text-align: left;
+      padding: 6px 0;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    .next-steps-table td {
+      font-size: 0.875rem;
+      padding: 8px 8px 8px 0;
+      border-bottom: 1px solid #ebebeb;
+      vertical-align: top;
+    }
+
+    /* --- COVER PAGE --- */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 0;
+    }
+
+    .cover-logo {
+      margin-bottom: 64px;
+    }
+
+    .cover-logo img {
+      height: 56px;
+      display: block;
+    }
+
+    .cover-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .cover-subtitle {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 1.0625rem;
+      color: #666666;
+      margin-bottom: 48px;
+      line-height: 1.5;
+    }
+
+    .cover-confidential {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #999999;
+      border-top: 1px solid #d4d4d4;
+      padding-top: 16px;
+      display: inline-block;
+    }
+
+    .cover-divider {
+      width: 64px;
+      height: 3px;
+      background: #0B5394;
+      margin-bottom: 32px;
+    }
+
+    /* --- PAGE FOOTER --- */
+    .page-footer {
+      position: absolute;
+      bottom: 36px;
+      left: 56px;
+      right: 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.625rem;
+      color: #999999;
+      letter-spacing: 0.05em;
+      border-top: 1px solid #d4d4d4;
+      padding-top: 10px;
+    }
+
+    .page-footer span {
+      font-size: 0.625rem;
+      color: #999999;
+    }
+
+    .page-footer a {
+      color: #999999;
+      text-decoration: none;
+    }
+
+    .page-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* --- PLACEHOLDER STYLING --- */
+    .placeholder {
+      color: #0B5394;
+      background: #E8F0FE;
+      padding: 1px 4px;
+      font-weight: 600;
+    }
+
+    /* --- DOWNLOAD BUTTON --- */
+    .download-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 10px 20px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: #0B5394;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background: #094075;
+    }
+
+    @page {
+      margin: 0;
+      size: 8.5in 11in;
+    }
+
+    /* --- PRINT STYLES --- */
+    @media print {
+      body {
+        background: none;
+      }
+
+      .page {
+        width: 8.5in;
+        height: 11in;
+        max-height: 11in;
+        margin: 0;
+        padding: 48px 56px;
+        border: none;
+        overflow: hidden;
+        page-break-inside: avoid;
+      }
+
+      .page-footer {
+        position: fixed;
+        bottom: 24px;
+      }
+
+      .download-btn { display: none; }
+    }
+
+    /* --- SUB-SECTION HEADER --- */
+    .sub-section-header {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    /* ======================================================================
+       CALL PREP WORKSHEET — FORM OVERRIDES
+       Printable, fillable worksheet for pre-call preparation.
+       ====================================================================== */
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #0B5394;
+    }
+
+    .page-header h1 {
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .page-header img {
+      height: 22px;
+    }
+
+    /* Form field grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 28px;
+      margin-bottom: 20px;
+    }
+
+    .form-field {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding-bottom: 2px;
+    }
+
+    .form-label {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #666666;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .form-blank {
+      flex: 1;
+      border-bottom: 1px solid #999999;
+      height: 22px;
+    }
+
+    /* Question blocks */
+    .question-block {
+      margin-bottom: 14px;
+    }
+
+    .question-text {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .question-number {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #0B5394;
+      margin-right: 6px;
+    }
+
+    .write-line {
+      height: 22px;
+      border-bottom: 1px solid #d4d4d4;
+      margin-bottom: 2px;
+    }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+      margin-bottom: 16px;
+    }
+
+    .checklist li {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      margin-bottom: 5px;
+      padding-left: 4px;
+      color: #1a1a1a;
+    }
+
+    .checkbox {
+      font-size: 0.875rem;
+      margin-right: 8px;
+      color: #666666;
+    }
+
+    /* Notes section lines */
+    .notes-line {
+      height: 26px;
+      border-bottom: 1px solid #d4d4d4;
+      margin-bottom: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<button class="download-btn" onclick="window.print()">&#8595; Download PDF</button>
+
+  <section class="page">
+
+    <div class="page-header">
+      <h1>Call Prep Worksheet</h1>
+      <img src="../logos/logo-full-light.png" alt="8020REI">
+    </div>
+
+    <!-- SECTION 1: CLIENT INFO -->
+    <h3 class="sub-section-header" style="margin-top: 0;">CLIENT INFO</h3>
+    <div class="form-grid">
+      <div class="form-field">
+        <span class="form-label">Client Name:</span>
+        <div class="form-blank"></div>
+      </div>
+      <div class="form-field">
+        <span class="form-label">Date:</span>
+        <div class="form-blank"></div>
+      </div>
+      <div class="form-field">
+        <span class="form-label">CSM:</span>
+        <div class="form-blank"></div>
+      </div>
+      <div class="form-field">
+        <span class="form-label">Counties:</span>
+        <div class="form-blank"></div>
+      </div>
+      <div class="form-field">
+        <span class="form-label">Health Score:</span>
+        <div class="form-blank"></div>
+      </div>
+      <div class="form-field">
+        <span class="form-label">Days Since Last Contact:</span>
+        <div class="form-blank"></div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: THE 5 MANDATORY QUESTIONS -->
+    <h3 class="sub-section-header">THE 5 MANDATORY QUESTIONS</h3>
+
+    <div class="question-block">
+      <div class="question-text"><span class="question-number">1.</span>What is the single most important message?</div>
+      <div class="write-line"></div>
+      <div class="write-line"></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-text"><span class="question-number">2.</span>Who is the audience and what do they need to decide?</div>
+      <div class="write-line"></div>
+      <div class="write-line"></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-text"><span class="question-number">3.</span>What are the 2-4 supporting arguments (MECE)?</div>
+      <div class="write-line"></div>
+      <div class="write-line"></div>
+      <div class="write-line"></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-text"><span class="question-number">4.</span>What data proves each argument?</div>
+      <div class="write-line"></div>
+      <div class="write-line"></div>
+      <div class="write-line"></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-text"><span class="question-number">5.</span>What is the recommended next step?</div>
+      <div class="write-line"></div>
+      <div class="write-line"></div>
+    </div>
+
+    <!-- SECTION 3: PRE-CALL CHECKLIST -->
+    <h3 class="sub-section-header">PRE-CALL CHECKLIST</h3>
+    <ul class="checklist">
+      <li><span class="checkbox">&#9633;</span>Reviewed health score and risk flags</li>
+      <li><span class="checkbox">&#9633;</span>Checked last engagement notes in Salesmate</li>
+      <li><span class="checkbox">&#9633;</span>Reviewed recent Freshdesk tickets</li>
+      <li><span class="checkbox">&#9633;</span>Checked Feedback Loop submission status</li>
+      <li><span class="checkbox">&#9633;</span>Reviewed ad performance (if applicable)</li>
+      <li><span class="checkbox">&#9633;</span>Prepared specific data points to discuss</li>
+    </ul>
+
+    <!-- SECTION 4: CALL NOTES -->
+    <h3 class="sub-section-header">CALL NOTES</h3>
+    <div class="notes-line"></div>
+    <div class="notes-line"></div>
+    <div class="notes-line"></div>
+    <div class="notes-line"></div>
+    <div class="notes-line"></div>
+
+    <footer class="page-footer">
+      <span><a href="https://booking.8020rei.com">8020rei.com</a></span>
+      <span>Confidential</span>
+      <span>Page 1</span>
+    </footer>
+  </section>
+
+
+</body>
+</html>

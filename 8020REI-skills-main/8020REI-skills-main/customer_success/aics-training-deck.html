@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building an AI-Powered CS Operating System — AICS Training</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+      color: #1a1a1a;
+      background: #111;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ── Slide Container ── */
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ── Slide Inner Layout ── */
+    .slide-inner {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px 100px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .slide-inner.top-aligned {
+      justify-content: center;
+      padding-top: 40px;
+      padding-bottom: 40px;
+    }
+
+    /* ── Typography ── */
+    .section-label {
+      font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #0B5394;
+      margin-bottom: 16px;
+    }
+
+    .slide-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: #1a1a1a;
+      margin-bottom: 32px;
+      max-width: 900px;
+    }
+
+    .slide-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: #444;
+      max-width: 760px;
+      margin-bottom: 40px;
+    }
+
+    .emphasis {
+      color: #0B5394;
+      font-weight: 600;
+    }
+
+    strong { font-weight: 700; }
+
+    /* ── Cover Slide ── */
+    .cover {
+      justify-content: center;
+      align-items: flex-start;
+      padding: 80px 100px;
+    }
+
+    .cover .cover-logo {
+      margin-bottom: 48px;
+    }
+
+    .cover .cover-logo img {
+      height: 44px;
+    }
+
+    .cover .slide-title {
+      font-size: 2.8rem;
+      max-width: 850px;
+      margin-bottom: 20px;
+    }
+
+    .cover .cover-meta {
+      font-size: 1rem;
+      color: #666;
+      line-height: 1.8;
+      margin-top: 8px;
+    }
+
+    .cover .cover-divider {
+      width: 64px;
+      height: 3px;
+      background: #0B5394;
+      margin: 28px 0;
+    }
+
+    /* ── Closing Slide ── */
+    .closing {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .closing .slide-title {
+      max-width: 800px;
+    }
+
+    .closing .cover-meta {
+      font-size: 1rem;
+      color: #666;
+      line-height: 1.8;
+      margin-top: 20px;
+    }
+
+    /* ── Content Grids ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 16px;
+      align-items: stretch;
+    }
+
+    .grid-2 > div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-2 > div > .card:last-child {
+      flex: 1;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+      margin-top: 16px;
+      align-items: stretch;
+    }
+
+    .grid-3 > .card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 24px;
+      margin-top: 16px;
+      align-items: stretch;
+    }
+
+    .grid-4 > .card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Cards ── */
+    .card {
+      padding: 28px 24px;
+      border: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .card-accent {
+      border-top: 3px solid #0B5394;
+    }
+
+    .card-num {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0B5394;
+      margin-bottom: 8px;
+    }
+
+    .card h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .card p, .card li {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #444;
+    }
+
+    .card ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .card ul li {
+      padding-left: 16px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+
+    .card ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      background: #0B5394;
+      border-radius: 50%;
+    }
+
+    /* ── Comparison ── */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 32px;
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    .comparison-box {
+      padding: 32px 28px;
+    }
+
+    .comparison-bad {
+      border: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .comparison-good {
+      border: 2px solid #0B5394;
+      background: #f0f6fc;
+    }
+
+    .comparison-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #0B5394;
+      padding-top: 60px;
+    }
+
+    .comparison-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .comparison-bad .comparison-label { color: #991B1B; }
+    .comparison-good .comparison-label { color: #166534; }
+
+    .comparison-box h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 12px;
+    }
+
+    .comparison-box p {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: #444;
+    }
+
+    /* ── Question List ── */
+    .question-list {
+      list-style: none;
+      padding: 0;
+      counter-reset: q;
+    }
+
+    .question-list li {
+      counter-increment: q;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .question-list li::before {
+      content: counter(q);
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #0B5394;
+      min-width: 28px;
+    }
+
+    .question-list li:last-child {
+      border-bottom: none;
+    }
+
+    /* ── Takeaway Boxes ── */
+    .takeaway {
+      display: flex;
+      gap: 40px;
+      margin-top: 24px;
+    }
+
+    .takeaway-item {
+      flex: 1;
+      padding: 32px 28px;
+      border-top: 3px solid #0B5394;
+      background: #fafafa;
+    }
+
+    .takeaway-num {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #0B5394;
+      margin-bottom: 12px;
+    }
+
+    .takeaway-item h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      line-height: 1.35;
+    }
+
+    .takeaway-item p {
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: #444;
+    }
+
+    /* ── Architecture Diagram ── */
+    .arch-flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      margin-top: 24px;
+    }
+
+    .arch-layer {
+      flex: 1;
+      padding: 28px 20px;
+      border: 1px solid #e0e0e0;
+      border-right: none;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .arch-layer:last-child {
+      border-right: 1px solid #e0e0e0;
+    }
+
+    .arch-layer.arch-highlight {
+      background: #f0f6fc;
+      border: 2px solid #0B5394;
+    }
+
+    .arch-layer-num {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #0B5394;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    .arch-layer h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .arch-layer p {
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: #444;
+      flex: 1;
+    }
+
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      font-size: 1.2rem;
+      color: #0B5394;
+      padding: 0 4px;
+    }
+
+    /* ── Folder Structure ── */
+    .folder-tree {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.85rem;
+      line-height: 1.9;
+      color: #444;
+      padding: 28px 32px;
+      background: #f8f8f8;
+      border: 1px solid #e0e0e0;
+    }
+
+    .folder-tree .dir { color: #0B5394; font-weight: 600; }
+    .folder-tree .file { color: #1a1a1a; }
+    .folder-tree .comment { color: #999; }
+
+    /* ── Stats Row ── */
+    .stat-row {
+      display: flex;
+      gap: 48px;
+      margin-top: 24px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: #0B5394;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Workflow Steps ── */
+    .workflow {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin-top: 20px;
+    }
+
+    .workflow-step {
+      flex: 1;
+      text-align: center;
+      padding: 20px 16px;
+    }
+
+    .workflow-icon {
+      width: 56px;
+      height: 56px;
+      background: #f0f6fc;
+      border: 2px solid #0B5394;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+      font-size: 1.2rem;
+    }
+
+    .workflow-step h4 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .workflow-step p {
+      font-size: 0.8rem;
+      line-height: 1.45;
+      color: #666;
+    }
+
+    .workflow-arrow {
+      display: flex;
+      align-items: center;
+      padding-top: 28px;
+      color: #0B5394;
+      font-size: 1.1rem;
+    }
+
+    /* ── Audit Results ── */
+    .audit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    .audit-item {
+      padding: 20px 24px;
+      border-left: 3px solid #0B5394;
+      background: #fafafa;
+    }
+
+    .audit-item h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .audit-item p {
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: #444;
+    }
+
+    .audit-item.fixed {
+      border-left-color: #166534;
+    }
+
+    /* ── Rules List ── */
+    .rules-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .rules-list li {
+      display: flex;
+      gap: 16px;
+      align-items: baseline;
+      padding: 16px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .rules-list li:last-child { border-bottom: none; }
+
+    .rule-icon {
+      min-width: 24px;
+      font-size: 1rem;
+      color: #0B5394;
+      text-align: center;
+    }
+
+    /* ── Slide Footer ── */
+    .slide-footer {
+      padding: 16px 100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: #999;
+      border-top: 1px solid #eee;
+    }
+
+    .slide-footer a {
+      color: #999;
+      text-decoration: none;
+    }
+
+    /* ── Navigation ── */
+    .nav {
+      position: fixed;
+      bottom: 20px;
+      right: 24px;
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav button {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #ccc;
+      background: rgba(255,255,255,0.95);
+      cursor: pointer;
+      font-size: 1rem;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .nav button:hover {
+      background: #f0f6fc;
+      border-color: #0B5394;
+    }
+
+    .slide-counter {
+      position: fixed;
+      bottom: 26px;
+      left: 24px;
+      font-size: 0.75rem;
+      color: #999;
+      z-index: 100;
+      background: rgba(255,255,255,0.95);
+      padding: 4px 12px;
+    }
+
+    /* ── Print ── */
+    /* ── Download Button ── */
+    .download-btn {
+      position: fixed;
+      top: 20px;
+      right: 80px;
+      z-index: 200;
+      padding: 10px 20px;
+      font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: #0B5394;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+    .download-btn:hover { background: #094075; }
+
+    /* ── Print ── */
+    @page {
+      margin: 0;
+      size: 11in 8.5in;
+    }
+
+    @media print {
+      body { background: #fff; overflow: visible; }
+      .deck { width: auto; height: auto; }
+      .slide {
+        position: relative;
+        opacity: 1;
+        pointer-events: auto;
+        page-break-after: always;
+        page-break-inside: avoid;
+        width: 11in;
+        height: 8.5in;
+        max-height: 8.5in;
+        overflow: hidden;
+      }
+      .slide-inner {
+        padding: 28px 52px;
+        max-height: 7.6in;
+        overflow: hidden;
+        justify-content: center;
+      }
+      .slide-inner.top-aligned {
+        justify-content: center;
+        padding-top: 28px;
+        padding-bottom: 28px;
+      }
+
+      /* Typography: moderate scale for letter landscape */
+      .slide-title { font-size: 1.6rem; margin-bottom: 16px; }
+      .slide-subtitle { font-size: 0.9rem; margin-bottom: 16px; }
+      .section-label { font-size: 0.65rem; margin-bottom: 8px; }
+
+      /* Cards */
+      .card { padding: 16px 18px; }
+      .card h3 { font-size: 0.85rem; margin-bottom: 6px; }
+      .card p, .card li { font-size: 0.78rem; line-height: 1.4; }
+      .card-num { font-size: 1.4rem; margin-bottom: 4px; }
+
+      /* Grids */
+      .grid-2 { gap: 24px; margin-top: 12px; }
+      .grid-3 { gap: 20px; margin-top: 12px; }
+      .grid-4 { gap: 16px; margin-top: 12px; }
+
+      /* Architecture flow */
+      .arch-flow { margin-top: 16px; }
+      .arch-layer { padding: 18px 16px; }
+      .arch-layer-num { font-size: 0.65rem; margin-bottom: 4px; }
+      .arch-layer h3 { font-size: 0.88rem; margin-bottom: 6px; }
+      .arch-layer p { font-size: 0.76rem; line-height: 1.4; }
+
+      /* Comparison */
+      .comparison { gap: 20px; margin-top: 12px; }
+      .comparison-box { padding: 20px; }
+      .comparison-box h3 { font-size: 1rem; margin-bottom: 8px; }
+      .comparison-box p { font-size: 0.78rem; }
+      .comparison-label { font-size: 0.6rem; margin-bottom: 10px; }
+      .comparison-arrow { font-size: 1.4rem; padding-top: 40px; }
+
+      /* Questions list */
+      .question-list li { padding: 8px 0; font-size: 0.88rem; }
+
+      /* Takeaways */
+      .takeaway { gap: 24px; }
+      .takeaway-item { padding: 20px; }
+      .takeaway-num { font-size: 1.3rem; margin-bottom: 8px; }
+      .takeaway-item h3 { font-size: 0.9rem; margin-bottom: 6px; }
+      .takeaway-item p { font-size: 0.76rem; }
+
+      /* Rules list */
+      .rules-list li { padding: 10px 0; font-size: 0.85rem; }
+
+      /* Workflow */
+      .workflow-step { padding: 14px 12px; }
+      .workflow-icon { width: 44px; height: 44px; font-size: 1rem; margin-bottom: 10px; }
+      .workflow-step h4 { font-size: 0.85rem; }
+      .workflow-step p { font-size: 0.74rem; }
+
+      /* Stats */
+      .stat-value { font-size: 2rem; }
+      .stat-label { font-size: 0.68rem; }
+
+      /* Charts */
+      .chart-grid { gap: 16px; margin-top: 8px; }
+      .chart-card { padding: 14px; }
+      .chart-card h4 { font-size: 0.76rem; margin-bottom: 1px; }
+      .chart-caption { font-size: 0.62rem; margin-bottom: 6px; }
+      .chart-wrap { height: 150px; }
+
+      /* Footer */
+      .nav, .slide-counter, .download-btn { display: none; }
+      .slide-footer { position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 56px; font-size: 0.6rem; }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .slide-inner { padding: 40px 48px; }
+      .slide-title { font-size: 1.8rem; }
+    }
+    /* ── Chart Containers ── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 12px;
+    }
+
+    .chart-card {
+      padding: 20px 20px 16px;
+      border: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .chart-card h4 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 2px;
+    }
+
+    .chart-caption {
+      font-size: 0.72rem;
+      color: #666;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 180px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- ═══════════════════════════════════════════ SLIDE 1: COVER ═══ -->
+  <section class="slide active" id="slide-1">
+    <div class="slide-inner cover">
+      <div class="cover-logo">
+        <img src="logos/logo-full-light.png" alt="8020REI">
+      </div>
+      <h1 class="slide-title">Structured thinking + AI produces scalable, consultant-quality operations</h1>
+      <div class="cover-divider"></div>
+      <div class="cover-meta">
+        <strong>Case Study:</strong> Building an AI-Powered CS Operating System<br>
+        AICS Training &nbsp;·&nbsp; March 2026
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 2: THE PROBLEM ═══ -->
+  <section class="slide" id="slide-2">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">The Problem</div>
+      <h2 class="slide-title">Most teams lose knowledge and consistency every time someone leaves or joins</h2>
+      <p class="slide-subtitle">Customer Success depends on communication quality. When that quality lives in people's heads instead of in a system, it degrades every time the team changes.</p>
+      <div class="grid-4">
+        <div class="card card-accent">
+          <h3>Tribal knowledge</h3>
+          <p>Business context lives in Slack threads, undocumented calls, and "ask Sarah — she knows." When Sarah leaves, so does the knowledge.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>Inconsistent output</h3>
+          <p>Every CSM writes differently. Reports vary in structure, quality, and depth. There is no shared standard for what "good" looks like.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>Unscalable training</h3>
+          <p>Onboarding a new CSM takes weeks of shadowing and ad-hoc knowledge transfer. The process depends on whoever has time to teach.</p>
+        </div>
+        <div class="card card-accent">
+          <h3>AI without rails</h3>
+          <p>Teams using AI for reports get fluent-sounding output that is factually vague, structurally inconsistent, and lacks a clear point.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 3: THE INSIGHT ═══ -->
+  <section class="slide" id="slide-3">
+    <div class="slide-inner">
+      <div class="section-label">The Insight</div>
+      <h2 class="slide-title">The fix is not more training — it is encoding the thinking framework into the system itself</h2>
+      <p class="slide-subtitle">When you give both humans and AI the same structured context, the same communication rules, and the same templates, output quality becomes a property of the system — not of the individual.</p>
+      <div class="grid-3" style="margin-top: 32px;">
+        <div class="card" style="text-align: center; padding: 36px 24px;">
+          <div class="card-num">1</div>
+          <h3>The format is the discipline</h3>
+          <p>A template that requires a conclusion-driven title forces the writer to <em>have</em> a conclusion before writing.</p>
+        </div>
+        <div class="card" style="text-align: center; padding: 36px 24px;">
+          <div class="card-num">2</div>
+          <h3>Constraints produce clarity</h3>
+          <p>A 5-page maximum and mandatory next steps eliminate filler and force prioritization.</p>
+        </div>
+        <div class="card" style="text-align: center; padding: 36px 24px;">
+          <div class="card-num">3</div>
+          <h3>AI amplifies the framework</h3>
+          <p>AI does not replace the thinking — it enforces it at scale, consistently, on every output.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 4: ARCHITECTURE ═══ -->
+  <section class="slide" id="slide-4">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">The Architecture</div>
+      <h2 class="slide-title">A 4-layer system turns tribal knowledge into a portable, reusable operating system</h2>
+      <div class="arch-flow">
+        <div class="arch-layer">
+          <div class="arch-layer-num">Layer 1</div>
+          <h3>Business Context</h3>
+          <p>6 files covering company, platform, deal pipeline, CS operations, marketing funnel, and glossary. The complete operating knowledge a CSM needs.</p>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-layer">
+          <div class="arch-layer-num">Layer 2</div>
+          <h3>Communication Standards</h3>
+          <p>Pyramid Principle, MECE structure, 5 Mandatory Questions, tone guidelines, number formatting. How to think before writing.</p>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-layer">
+          <div class="arch-layer-num">Layer 3</div>
+          <h3>Design System</h3>
+          <p>Typography, color, layout, and report structure rules. A visual rulebook that enforces the thinking framework automatically.</p>
+        </div>
+        <div class="arch-arrow">&#8594;</div>
+        <div class="arch-layer arch-highlight">
+          <div class="arch-layer-num">Layer 4</div>
+          <h3>AI Integration</h3>
+          <p>Load the folder as AI context. The AI reads the same rules and produces compliant, fact-grounded output at scale.</p>
+        </div>
+      </div>
+      <p style="font-size: 0.82rem; color: #666; margin-top: 16px; max-width: 700px;">The entire system lives in a single folder — portable, easy to maintain, and readable by both people and AI. Generated reports are saved to a <strong style="color: #0B5394;">clients/</strong> folder, one subfolder per client, each with a <strong>context.md</strong> file that serves as the structural memory of the relationship.</p>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 5: CONTEXT FILES ═══ -->
+  <section class="slide" id="slide-5">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Layer 1 — Business Context</div>
+      <h2 class="slide-title">Six knowledge documents give any person — or AI — complete business operating knowledge</h2>
+      <div class="grid-2" style="margin-top: 16px;">
+        <div>
+          <div class="card" style="margin-bottom: 8px; padding: 10px 16px;">
+            <h3 style="font-size: 0.9rem; margin-bottom: 2px;"><span style="color: #0B5394; margin-right: 8px;">01</span> Company &amp; Product</h3>
+            <p style="font-size: 0.82rem; margin: 0;">ICP, competitive moats, pricing, market positioning</p>
+          </div>
+          <div class="card" style="margin-bottom: 8px; padding: 10px 16px;">
+            <h3 style="font-size: 0.9rem; margin-bottom: 2px;"><span style="color: #0B5394; margin-right: 8px;">02</span> Platform</h3>
+            <p style="font-size: 0.82rem; margin: 0;">The 6 applications and how they connect end to end</p>
+          </div>
+          <div class="card" style="margin-bottom: 8px; padding: 10px 16px;">
+            <h3 style="font-size: 0.9rem; margin-bottom: 2px;"><span style="color: #0B5394; margin-right: 8px;">03</span> Deal Pipeline</h3>
+            <p style="font-size: 0.82rem; margin: 0;">The complete 8-phase deal flow from lead to close</p>
+          </div>
+          <div class="card" style="margin-bottom: 8px; padding: 10px 16px;">
+            <h3 style="font-size: 0.9rem; margin-bottom: 2px;"><span style="color: #0B5394; margin-right: 8px;">04</span> CS Operations</h3>
+            <p style="font-size: 0.82rem; margin: 0;">13 core processes, KPIs, tools, and escalation procedures</p>
+          </div>
+          <div class="card" style="margin-bottom: 8px; padding: 10px 16px;">
+            <h3 style="font-size: 0.9rem; margin-bottom: 2px;"><span style="color: #0B5394; margin-right: 8px;">05</span> Marketing Funnel</h3>
+            <p style="font-size: 0.82rem; margin: 0;">How leads arrive: channels, qualification, conversion benchmarks</p>
+          </div>
+          <div class="card" style="padding: 10px 16px;">
+            <h3 style="font-size: 0.9rem; margin-bottom: 2px;"><span style="color: #0B5394; margin-right: 8px;">06</span> Glossary</h3>
+            <p style="font-size: 0.82rem; margin: 0;">Business and product terminology — the shared language</p>
+          </div>
+        </div>
+        <div>
+          <div class="card card-accent" style="margin-bottom: 16px;">
+            <h3>Why written documents, not slide decks?</h3>
+            <p>Documents are searchable, easy to update, and AI can read them directly. Slide decks are presentation artifacts — they cannot be loaded as AI context and they decay the moment someone stops maintaining them.</p>
+          </div>
+          <div class="card card-accent" style="margin-bottom: 16px;">
+            <h3>Cross-referenced against every source of truth</h3>
+            <p>Every fact in these documents was verified against internal documentation, CRM data, and operational records. When sources disagreed, we investigated until we found the canonical answer.</p>
+          </div>
+          <div class="card card-accent">
+            <h3>Test for internalization</h3>
+            <p>Can you explain the Feedback Loop cycle, the 5 competitive moats, and the health score system in 2 minutes each? If not, re-read.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 6: 5 QUESTIONS ═══ -->
+  <section class="slide" id="slide-6">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Layer 2 — Communication Framework</div>
+      <h2 class="slide-title">Five mandatory questions before any communication ensure every message has a point</h2>
+      <div class="grid-2">
+        <div>
+          <ol class="question-list">
+            <li><strong>What is the single most important message?</strong><br><span style="font-size: 0.85rem; color: #666;">If you cannot say it in one sentence, you do not understand it yet. This becomes your title.</span></li>
+            <li><strong>Who is the audience and what do they need to decide?</strong><br><span style="font-size: 0.85rem; color: #666;">Shape depth, language, and emphasis for the reader.</span></li>
+            <li><strong>What are the 2–4 supporting arguments (MECE)?</strong><br><span style="font-size: 0.85rem; color: #666;">These become your page sections. No overlap, nothing missing.</span></li>
+            <li><strong>What data proves each argument?</strong><br><span style="font-size: 0.85rem; color: #666;">No argument without evidence. No evidence without an argument.</span></li>
+            <li><strong>What is the recommended next step?</strong><br><span style="font-size: 0.85rem; color: #666;">Every communication ends with action. If there is nothing to do, it should not exist.</span></li>
+          </ol>
+        </div>
+        <div>
+          <div class="card" style="background: #f0f6fc; border: 2px solid #0B5394; padding: 32px 28px;">
+            <h3 style="font-family: Georgia, serif; font-size: 1.15rem; margin-bottom: 16px;">The rule</h3>
+            <p style="font-size: 1.05rem; line-height: 1.6;">Before writing <em>anything</em> to a client — a report, an email, a Slack message — answer these five questions. If you cannot answer Question 1 in one sentence, you are not ready to write.</p>
+            <p style="font-size: 0.9rem; color: #444; margin-top: 16px; line-height: 1.55;">This is not bureaucracy. It takes 2 minutes. It prevents the 45-minute rewrite that happens when you start writing without a point.</p>
+          </div>
+          <div class="card" style="margin-top: 16px; padding: 24px 28px;">
+            <h3 style="font-family: Georgia, serif; font-size: 0.95rem; margin-bottom: 10px;">For AI integration</h3>
+            <p style="font-size: 0.85rem; line-height: 1.55; color: #444;">When AI loads these rules as context, it asks the same 5 questions before generating a report. The framework applies to humans and machines identically.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 7: PYRAMID PRINCIPLE ═══ -->
+  <section class="slide" id="slide-7">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Layer 2 — Pyramid Principle</div>
+      <h2 class="slide-title">The Pyramid Principle eliminates ambiguity: conclusion first, evidence second</h2>
+      <p class="slide-subtitle">Every title on every page must be a full sentence stating the takeaway — not a topic label. This single rule transforms report quality more than any other.</p>
+      <div class="comparison">
+        <div class="comparison-box comparison-bad">
+          <span class="comparison-label">Topic label (wrong)</span>
+          <h3>"Q1 Performance Overview"</h3>
+          <p>This tells the reader nothing. They must read the entire page to discover the point. The writer may not even <em>have</em> a point — the label hides the absence of thinking.</p>
+          <p style="margin-top: 14px; font-size: 0.8rem; color: #666; font-style: italic; border-top: 1px solid #e0e0e0; padding-top: 12px;">"Summit Property Group — Report"<br>"BuyBox Audit" &nbsp;·&nbsp; "Monthly Update"</p>
+        </div>
+        <div class="comparison-arrow">&#8594;</div>
+        <div class="comparison-box comparison-good">
+          <span class="comparison-label">Action title (correct)</span>
+          <h3>"Client health improved in Q1, but 12 at-risk accounts need immediate intervention"</h3>
+          <p>The reader knows the message before reading a single line of detail. The writer was <em>forced</em> to have a conclusion. The evidence that follows has a clear purpose.</p>
+          <p style="margin-top: 14px; font-size: 0.8rem; color: #444; font-style: italic; border-top: 1px solid #c3dafb; padding-top: 12px;">"Summit Property Group's health score reached 3.8 as engagement exceeded targets, but 2 counties need BuyBox tightening"</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 8: DESIGN SYSTEM ═══ -->
+  <section class="slide" id="slide-8">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Layer 3 — Design System</div>
+      <h2 class="slide-title">Visual constraints enforce the thinking framework — every design rule serves communication</h2>
+      <div class="grid-2" style="margin-top: 16px;">
+        <div>
+          <ul class="rules-list">
+            <li>
+              <span class="rule-icon" style="font-family: Georgia, serif; font-weight: 700;">Aa</span>
+              <span><strong>Georgia for headlines, Helvetica for body.</strong> No other fonts. Georgia conveys authority. Helvetica conveys clarity.</span>
+            </li>
+            <li>
+              <span class="rule-icon">&#9632;</span>
+              <span><strong>Color is semantic only.</strong> One brand blue for accent. Green, amber, and red only for status indicators. Never decorative.</span>
+            </li>
+            <li>
+              <span class="rule-icon">&#9634;</span>
+              <span><strong>No decoration.</strong> No rounded corners, no shadows, no gradients, no emojis. If it does not help the reader understand faster, remove it.</span>
+            </li>
+            <li>
+              <span class="rule-icon">5</span>
+              <span><strong>Maximum 5 pages.</strong> If a report needs more, the thinking is not sharp enough. The constraint is the discipline.</span>
+            </li>
+            <li>
+              <span class="rule-icon">&#8594;</span>
+              <span><strong>Every report ends with next steps.</strong> Each one has three parts: the action, the owner, and the date.</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div class="card card-accent" style="margin-bottom: 16px;">
+            <h3>Why a system of rules, not a style guide?</h3>
+            <p>A style guide is a suggestion — people forget it. A system of rules is baked into the templates themselves. No one can accidentally use the wrong font, add decorative colors, or skip the conclusion. The rules are the structure, not a separate document people ignore.</p>
+          </div>
+          <div class="card card-accent" style="margin-bottom: 16px;">
+            <h3>One rulebook, all reports</h3>
+            <p>A single set of design rules defines every component: KPI cards, insight boxes, data tables, next-steps tables, cover pages, and footers. New report types just assemble existing building blocks.</p>
+          </div>
+          <div class="card card-accent">
+            <h3>35–40% whitespace</h3>
+            <p>White space is not empty space — it is emphasis. Dense pages signal that the writer could not decide what matters. Generous margins signal confidence in the message.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 9: DATA VISUALIZATION ═══ -->
+  <section class="slide" id="slide-9">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Layer 3 — Data Visualization</div>
+      <h2 class="slide-title">Chart.js renders brand-consistent data visualizations that print cleanly to PDF</h2>
+      <p class="slide-subtitle">Four chart types cover every reporting need — bar, donut, line, and horizontal bar. All use the 8020REI palette and follow the rule: every chart has a "so what."</p>
+      <div class="chart-grid">
+
+        <div class="chart-card">
+          <h4>Lead Volume by County — Q1 2026</h4>
+          <div class="chart-caption">New counties (Harris, Maricopa) showing early traction but below established markets</div>
+          <div class="chart-wrap">
+            <canvas id="chart-bar"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h4>Marketing Channel Mix</h4>
+          <div class="chart-caption">Direct mail dominates at 38%, but cold calling shows highest conversion rate</div>
+          <div class="chart-wrap">
+            <canvas id="chart-donut"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h4>Client Health Score — 6 Month Trend</h4>
+          <div class="chart-caption">Health score improved from 2.8 to 3.8 over 6 months — on track for 4.0 target</div>
+          <div class="chart-wrap">
+            <canvas id="chart-line"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h4>Cost per Deal by Market</h4>
+          <div class="chart-caption">Harris TX and Maricopa AZ above $3,500 target — BuyBox tightening needed</div>
+          <div class="chart-wrap">
+            <canvas id="chart-hbar"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 10: AI INTEGRATION ═══ -->
+  <section class="slide" id="slide-10">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Layer 4 — AI Integration</div>
+      <h2 class="slide-title">AI reads the same context and standards, producing compliant output at scale</h2>
+      <p class="slide-subtitle">Give AI the same knowledge base your team reads. It operates with the same business context, communication rules, and visual standards as a trained CSM — instantly.</p>
+      <div class="workflow">
+        <div class="workflow-step">
+          <div class="workflow-icon">&#128193;</div>
+          <h4>Give AI context</h4>
+          <p>Load the knowledge base into an AI project — it reads every document in seconds</p>
+        </div>
+        <div class="workflow-arrow">&#8594;</div>
+        <div class="workflow-step">
+          <div class="workflow-icon">&#128172;</div>
+          <h4>Request a report</h4>
+          <p>"Create a fulfillment report for client X with this month's delivery data"</p>
+        </div>
+        <div class="workflow-arrow">&#8594;</div>
+        <div class="workflow-step">
+          <div class="workflow-icon">&#9881;</div>
+          <h4>AI applies every rule</h4>
+          <p>Pyramid Principle, MECE structure, action titles, correct formatting, verified business facts</p>
+        </div>
+        <div class="workflow-arrow">&#8594;</div>
+        <div class="workflow-step">
+          <div class="workflow-icon">&#128196;</div>
+          <h4>Download PDF</h4>
+          <p>One click to a print-ready, professionally formatted report. Consistent every time.</p>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top: 36px;">
+        <div class="card card-accent">
+          <h3>What AI gets right because of the system</h3>
+          <ul>
+            <li>Business facts grounded in verified knowledge, not hallucinated</li>
+            <li>Every title is a conclusion, not a topic label</li>
+            <li>Health score thresholds, KPI targets, and terminology are canonical</li>
+            <li>Reports end with action + owner + date</li>
+            <li>Visual output matches the design system exactly</li>
+          </ul>
+        </div>
+        <div class="card card-accent">
+          <h3>What AI would get wrong without the system</h3>
+          <ul>
+            <li>Invents plausible-sounding but incorrect business facts</li>
+            <li>Writes topic-label titles ("Q1 Summary") instead of conclusions</li>
+            <li>Uses inconsistent colors, fonts, and layouts</li>
+            <li>Produces generic recommendations without owner/date</li>
+            <li>Cannot distinguish internal vs. external ICP thresholds</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 11: AUDIT ═══ -->
+  <section class="slide" id="slide-11">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Quality Assurance</div>
+      <h2 class="slide-title">Parallel AI audits catch inconsistencies humans miss — then fix them in minutes</h2>
+      <p class="slide-subtitle">We ran three AI audits in parallel across the entire package. Total time: under 4 minutes for a full cross-reference of 20+ documents against 6 internal knowledge sources.</p>
+      <div class="grid-3">
+        <div class="card card-accent">
+          <h3>Audit 1: Facts vs. Source of Truth</h3>
+          <p>Cross-referenced all 6 knowledge documents against internal documentation, CRM data, and operational records. Verified every business fact.</p>
+          <p style="margin-top: 12px; font-weight: 600; color: #0B5394;">3 critical, 5 medium, 5 low</p>
+        </div>
+        <div class="card card-accent">
+          <h3>Audit 2: Templates vs. Design System</h3>
+          <p>Checked all 8 report templates against every rule in the design system. Found formatting errors and rule violations.</p>
+          <p style="margin-top: 12px; font-weight: 600; color: #0B5394;">6 critical, 8 medium, 4 low</p>
+        </div>
+        <div class="card card-accent">
+          <h3>Audit 3: Internal Consistency</h3>
+          <p>Cross-checked numbers, terms, and references across all 20+ files. Verified every metric appears identically everywhere.</p>
+          <p style="margin-top: 12px; font-weight: 600; color: #0B5394;">4 critical, 9 medium, 6 low</p>
+        </div>
+      </div>
+      <div class="stat-row" style="margin-top: 28px; justify-content: center;">
+        <div class="stat">
+          <div class="stat-value">20+</div>
+          <div class="stat-label">Files audited</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Source systems checked</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">46</div>
+          <div class="stat-label">Issues found</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">46</div>
+          <div class="stat-label">Issues resolved</div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 12: RESULTS ═══ -->
+  <section class="slide" id="slide-12">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Outcome</div>
+      <h2 class="slide-title">The system produces consistent, actionable reports from day one — whether written by a person or an AI</h2>
+      <div class="grid-2" style="margin-top: 16px;">
+        <div>
+          <div class="card card-accent" style="margin-bottom: 16px;">
+            <h3>What the package delivers</h3>
+            <ul>
+              <li>8 ready-to-use report templates for every report type</li>
+              <li>1-page quick reference card and pre-call worksheet</li>
+              <li>Worked example with real data showing "what good looks like"</li>
+              <li>Unified visual identity — every report looks professionally consistent</li>
+              <li>Complete business context across 6 documents (~90 pages of knowledge)</li>
+              <li><strong>clients/</strong> folder structure — one subfolder per client with a context.md that AI reads before every report</li>
+            </ul>
+          </div>
+          <div class="card card-accent">
+            <h3>What changes for the team</h3>
+            <ul>
+              <li>New CSMs are productive from day 1, not week 3</li>
+              <li>Every report leads with a conclusion and ends with next steps</li>
+              <li>Terminology, metrics, and thresholds are canonical across all output</li>
+              <li>AI-generated reports are indistinguishable from hand-crafted ones</li>
+              <li>Quality is a property of the system, not the individual</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="background: #f0f6fc; border: 2px solid #0B5394; padding: 28px;">
+            <h3 style="font-family: Georgia, serif; margin-bottom: 16px;">What is in the package</h3>
+            <div style="padding: 4px 0;">
+              <div style="display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #d4e4f7;">
+                <span style="color: #0B5394; font-weight: 700; min-width: 110px; font-size: 0.85rem;">Master Guide</span>
+                <span style="font-size: 0.85rem; color: #444;">How to use the package — start here</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #d4e4f7;">
+                <span style="color: #0B5394; font-weight: 700; min-width: 110px; font-size: 0.85rem;">Knowledge Base</span>
+                <span style="font-size: 0.85rem; color: #444;">6 documents of verified business context</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #d4e4f7;">
+                <span style="color: #0B5394; font-weight: 700; min-width: 110px; font-size: 0.85rem;">Standards</span>
+                <span style="font-size: 0.85rem; color: #444;">Communication framework + visual rules</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #d4e4f7;">
+                <span style="color: #0B5394; font-weight: 700; min-width: 110px; font-size: 0.85rem;">Templates</span>
+                <span style="font-size: 0.85rem; color: #444;">8 report templates + worked example</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #d4e4f7;">
+                <span style="color: #0B5394; font-weight: 700; min-width: 110px; font-size: 0.85rem;">Brand Assets</span>
+                <span style="font-size: 0.85rem; color: #444;">Logo variants for all backgrounds</span>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: baseline; padding: 10px 0;">
+                <span style="color: #0B5394; font-weight: 700; min-width: 110px; font-size: 0.85rem;">Clients</span>
+                <span style="font-size: 0.85rem; color: #444;">Per-client folders with context.md + reports</span>
+              </div>
+            </div>
+            <p style="font-size: 0.82rem; color: #444; line-height: 1.55; margin-top: 16px;">The <strong>clients/</strong> folder is the structural backbone. Each client gets a subfolder with a <strong>context.md</strong> — a living document that captures account history, health status, and key contacts. AI reads it before every report to stay grounded in reality.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 13: TAKEAWAYS ═══ -->
+  <section class="slide" id="slide-13">
+    <div class="slide-inner top-aligned">
+      <div class="section-label">Key Takeaways</div>
+      <h2 class="slide-title">Three principles for building AI-powered operating systems</h2>
+      <div class="takeaway" style="margin-top: 24px;">
+        <div class="takeaway-item">
+          <div class="takeaway-num">1</div>
+          <h3>Structure the thinking, not just the output</h3>
+          <p>Templates and design systems are not enough. You need a communication framework — a mandatory thinking process that ensures every piece of output has a clear point, structured arguments, and actionable conclusions. The Pyramid Principle and the 5 Questions are the foundation. Everything else follows from clear thinking.</p>
+        </div>
+        <div class="takeaway-item">
+          <div class="takeaway-num">2</div>
+          <h3>Write it down in a format both people and AI can read</h3>
+          <p>Written documents are searchable, easy to update, and AI-readable. Slide decks, recorded sessions, and tribal knowledge are none of these. When knowledge is documented in a structured format, both your team and AI consume it identically. The quality becomes reproducible.</p>
+        </div>
+        <div class="takeaway-item">
+          <div class="takeaway-num">3</div>
+          <h3>Use AI to audit, not just generate</h3>
+          <p>The highest-leverage AI use case is not writing — it is cross-referencing. Parallel AI audits checked 20+ documents against 6 internal knowledge sources in under 4 minutes, finding 46 inconsistencies a human reviewer would have spent days on. Generate with AI, then audit with AI, then fix with AI.</p>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>AICS Training — Case Study</span>
+      <span>8020REI</span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ SLIDE 14: CLOSING ═══ -->
+  <section class="slide" id="slide-14">
+    <div class="slide-inner closing">
+      <img src="logos/logo-full-light.png" alt="8020REI" style="height: 44px; margin-bottom: 40px;">
+      <h2 class="slide-title" style="text-align: center;">Quality is a property of the system,<br>not of the individual.</h2>
+      <div class="cover-meta">
+        AICS Training &nbsp;·&nbsp; March 2026<br>
+        <a href="https://8020rei.com" style="color: #0B5394; text-decoration: none;">8020rei.com</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Download Button -->
+<button class="download-btn" onclick="window.print()">&#8595; Download PDF</button>
+
+<!-- Navigation -->
+<div class="slide-counter"><span id="current">1</span> / <span id="total">14</span></div>
+<div class="nav">
+  <button onclick="navigate(-1)" aria-label="Previous slide">&#8592;</button>
+  <button onclick="navigate(1)" aria-label="Next slide">&#8594;</button>
+</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = ((n % total) + total) % total;
+    slides[current].classList.add('active');
+    document.getElementById('current').textContent = current + 1;
+  }
+
+  function navigate(dir) { showSlide(current + dir); }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); navigate(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); navigate(-1); }
+    if (e.key === 'Home') { e.preventDefault(); showSlide(0); }
+    if (e.key === 'End') { e.preventDefault(); showSlide(total - 1); }
+  });
+
+  // Touch support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) navigate(diff > 0 ? 1 : -1);
+  });
+</script>
+
+<script>
+  // ── Chart.js Initialization ──
+  document.addEventListener('DOMContentLoaded', function() {
+    const palette = ['#1d4ed8', '#0f766e', '#a16207', '#7e22ce', '#c2410c', '#64748b'];
+
+    Chart.defaults.font.family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = '#666666';
+
+    // Bar chart — Lead Volume by County
+    new Chart(document.getElementById('chart-bar'), {
+      type: 'bar',
+      data: {
+        labels: ['Clark NV', 'Dallas TX', 'Maricopa AZ', 'Harris TX', 'Fulton GA'],
+        datasets: [
+          {
+            label: 'This Quarter',
+            data: [418, 367, 342, 289, 195],
+            backgroundColor: palette[0],
+            borderWidth: 0
+          },
+          {
+            label: 'Last Quarter',
+            data: [385, 340, 0, 0, 210],
+            backgroundColor: '#d4d4d4',
+            borderWidth: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 10 } } }
+        },
+        scales: {
+          y: { grid: { color: '#ebebeb' }, border: { display: false }, ticks: { font: { size: 10 } } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    // Donut chart — Marketing Channel Mix
+    new Chart(document.getElementById('chart-donut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Direct Mail', 'Cold Call', 'SMS', 'Online Ads', 'Referral'],
+        datasets: [{
+          data: [38, 27, 18, 12, 5],
+          backgroundColor: palette,
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: { position: 'right', labels: { boxWidth: 10, padding: 8, font: { size: 10 } } }
+        }
+      }
+    });
+
+    // Line chart — Health Score Trend
+    new Chart(document.getElementById('chart-line'), {
+      type: 'line',
+      data: {
+        labels: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
+        datasets: [{
+          label: 'Health Score',
+          data: [2.8, 3.0, 3.1, 3.2, 3.5, 3.8],
+          borderColor: palette[0],
+          backgroundColor: 'rgba(29, 78, 216, 0.08)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: palette[0],
+          pointRadius: 4,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { min: 2, max: 5, grid: { color: '#ebebeb' }, border: { display: false }, ticks: { font: { size: 10 } } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    // Horizontal bar chart — Cost per Deal
+    new Chart(document.getElementById('chart-hbar'), {
+      type: 'bar',
+      data: {
+        labels: ['Clark NV', 'Dallas TX', 'Fulton GA', 'Maricopa AZ', 'Harris TX'],
+        datasets: [{
+          label: 'Cost per Deal',
+          data: [2800, 3200, 3500, 4200, 5100],
+          backgroundColor: ['#166534', '#166534', '#B45309', '#991B1B', '#991B1B'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: '#ebebeb' },
+            border: { display: false },
+            ticks: { font: { size: 10 }, callback: function(v) { return '$' + v.toLocaleString(); } }
+          },
+          y: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

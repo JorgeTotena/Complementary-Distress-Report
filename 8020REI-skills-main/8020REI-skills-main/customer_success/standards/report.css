@@ -1,0 +1,508 @@
+/* ======================================================================
+   8020REI Report CSS Framework — Unified
+   Version: 2.0 — March 2026
+   Reference: DESIGN_SYSTEM.md
+   Usage: Canonical CSS for all report templates. Include inline in every
+   HTML report for portability (single self-contained file).
+   ====================================================================== */
+
+/* --- RESET & BASE --- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #1a1a1a;
+  background: #ffffff;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- TYPOGRAPHY --- */
+h1, h2, h3 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.25rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; letter-spacing: -0.01em; }
+h3 { font-size: 1.125rem; }
+
+p, li, td, th {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.9375rem;
+  color: #1a1a1a;
+  line-height: 1.6;
+}
+
+.sub-header {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 10px;
+}
+
+.sub-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #6b6b6b;
+  margin-bottom: 4px;
+}
+
+.body-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #2d2d2d;
+  max-width: 680px;
+}
+
+.body-sm {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #6b6b6b;
+}
+
+/* --- PAGE STRUCTURE --- */
+.page {
+  width: 8.5in;
+  min-height: 11in;
+  max-height: 11in;
+  margin: 0 auto;
+  padding: 48px 56px;
+  page-break-after: always;
+  page-break-inside: avoid;
+  position: relative;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.page:last-child {
+  page-break-after: auto;
+}
+
+@media screen {
+  .page {
+    border: 1px solid #d4d4d4;
+    margin-bottom: 24px;
+  }
+}
+
+/* --- PAGE HEADER (for non-cover pages) --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-logo { height: 22px; }
+.page-date { font-size: 10px; color: #a3a3a3; }
+
+/* --- SECTION LABEL --- */
+.section-label {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #0B5394;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* --- ACTION TITLE --- */
+.action-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.35;
+  margin-bottom: 28px;
+  border-bottom: 2px solid #0B5394;
+  padding-bottom: 12px;
+}
+
+.action-title .highlight { color: #0B5394; }
+
+/* --- KPI CARDS --- */
+.kpi-row {
+  display: flex;
+  gap: 0;
+  margin-bottom: 32px;
+}
+
+.kpi-card {
+  flex: 1;
+  padding: 20px 24px;
+  border: 1px solid #d4d4d4;
+  border-right: none;
+  text-align: center;
+}
+
+.kpi-card:last-child {
+  border-right: 1px solid #d4d4d4;
+}
+
+.kpi-label {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #666666;
+  margin-bottom: 6px;
+}
+
+.kpi-value {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0B5394;
+  line-height: 1.1;
+}
+
+.kpi-context {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.75rem;
+  color: #666666;
+  margin-top: 4px;
+}
+
+.kpi-delta { font-size: 12px; font-weight: 600; margin-top: 6px; }
+.kpi-delta.positive { color: #166534; }
+.kpi-delta.warning { color: #B45309; }
+.kpi-delta.negative { color: #991B1B; }
+
+/* --- INSIGHT BOX --- */
+.insight-box {
+  background: #E8F0FE;
+  border-left: 3px solid #0B5394;
+  padding: 16px 20px;
+  margin-bottom: 28px;
+}
+
+.insight-box p {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.insight-box strong { font-weight: 700; }
+.insight-box.warn { border-left-color: #B45309; background: #FEF3C7; }
+.insight-box.negative { border-left-color: #991B1B; background: #FEE2E2; }
+.insight-box.positive { border-left-color: #166534; background: #DCFCE7; }
+
+/* --- PHASE BLOCK --- */
+.phase-block {
+  padding: 18px 22px;
+  border-left: 3px solid #0B5394;
+  background: #E8F0FE;
+  margin-bottom: 14px;
+}
+
+.phase-num {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #0B5394;
+  margin-bottom: 4px;
+}
+
+.phase-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.phase-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #2d2d2d;
+}
+
+/* --- LAYOUT --- */
+.two-col {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.two-col .col { flex: 1; }
+
+.col h3 {
+  font-size: 1rem;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d4d4d4;
+}
+
+.row { display: flex; gap: 32px; }
+.row > * { flex: 1; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 18px; }
+
+.divider { border-top: 1px solid #d4d4d4; margin: 20px 0; }
+
+/* --- LISTS --- */
+ul.bullet-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+ul.bullet-list li {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #2d2d2d;
+  padding-left: 16px;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+ul.bullet-list li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 9px;
+  width: 5px; height: 5px;
+  background: #0B5394;
+  border-radius: 50%;
+}
+
+ul.bullet-list li strong { color: #1a1a1a; }
+
+ol.step-list {
+  list-style: none;
+  counter-reset: step;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+ol.step-list li {
+  counter-increment: step;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  font-size: 0.9375rem;
+  color: #2d2d2d;
+  line-height: 1.55;
+}
+
+ol.step-list li::before {
+  content: counter(step);
+  font-family: Georgia, 'Times New Roman', serif;
+  min-width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  color: #0B5394;
+  border: 1.5px solid #0B5394;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* --- TABLES --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+table th {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #666666;
+  text-align: left;
+  padding: 8px 8px 8px 0;
+  border-bottom: 2px solid #1a1a1a;
+}
+
+table td {
+  font-size: 0.875rem;
+  padding: 8px 8px 8px 0;
+  border-bottom: 1px solid #ebebeb;
+  color: #2d2d2d;
+  vertical-align: top;
+}
+
+table tr:last-child td { border-bottom: none; }
+table tr:nth-child(even) td { background: #F9FAFB; }
+table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* --- COVER PAGE --- */
+.cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 0;
+}
+
+.cover-logo { margin-bottom: 64px; }
+.cover-logo img { height: 56px; display: block; }
+
+.cover-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.cover-subtitle {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1.0625rem;
+  color: #666666;
+  margin-bottom: 48px;
+  line-height: 1.5;
+}
+
+.cover-confidential {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #999999;
+  border-top: 1px solid #d4d4d4;
+  padding-top: 16px;
+  display: inline-block;
+}
+
+.cover-divider {
+  width: 64px;
+  height: 3px;
+  background: #0B5394;
+  margin-bottom: 32px;
+}
+
+/* --- SUB-SECTION HEADER --- */
+.sub-section-header {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-top: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d4d4d4;
+}
+
+/* --- STATUS COLORS --- */
+.status-green { color: #166534; }
+.status-yellow { color: #B45309; }
+.status-red { color: #991B1B; }
+.bg-green { background: #DCFCE7; }
+.bg-yellow { background: #FEF3C7; }
+.bg-red { background: #FEE2E2; }
+
+/* --- PAGE FOOTER --- */
+.page-footer {
+  position: absolute;
+  bottom: 36px;
+  left: 56px;
+  right: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.625rem;
+  color: #999999;
+  letter-spacing: 0.05em;
+  border-top: 1px solid #d4d4d4;
+  padding-top: 10px;
+}
+
+.page-footer span { font-size: 0.625rem; color: #999999; }
+.page-footer a { color: #999999; text-decoration: none; }
+.page-footer a:hover { text-decoration: underline; }
+
+/* --- PLACEHOLDER STYLING --- */
+.placeholder {
+  color: #0B5394;
+  background: #E8F0FE;
+  padding: 1px 4px;
+  font-weight: 600;
+}
+
+/* --- UTILITIES --- */
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+
+/* --- DOWNLOAD BUTTON --- */
+.download-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 10px 20px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #0B5394;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: background 0.2s;
+}
+
+.download-btn:hover {
+  background: #094075;
+}
+
+/* --- PRINT --- */
+@page {
+  margin: 0;
+  size: 8.5in 11in;
+}
+
+@media print {
+  body { background: none; }
+
+  .download-btn { display: none; }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    max-height: 11in;
+    margin: 0;
+    padding: 48px 56px;
+    border: none;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+
+  .page-footer {
+    position: fixed;
+    bottom: 24px;
+  }
+}

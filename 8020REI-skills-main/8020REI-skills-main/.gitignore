@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Client data — stays local, not in the shared repo
+**/clients/
+
+# Generated outputs
+*.pdf
+
+# Environment
+.env
+.env.*

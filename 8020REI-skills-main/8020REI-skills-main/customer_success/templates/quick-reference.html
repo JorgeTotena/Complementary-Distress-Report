@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSM Quick Reference — 8020REI</title>
+
+  <style>
+    /* ======================================================================
+       8020REI REPORT CSS FRAMEWORK
+       Design System: McKinsey-style consulting report
+       No rounded corners. No shadows. No gradients.
+       Clean, authoritative, data-driven.
+       ====================================================================== */
+
+    /* --- RESET & BASE --- */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #1a1a1a;
+      background: #ffffff;
+      line-height: 1.6;
+    }
+
+    /* --- TYPOGRAPHY --- */
+    h1, h2, h3 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.2;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: 1.125rem;
+    }
+
+    p, li, td, th {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.9375rem;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    /* --- PAGE STRUCTURE --- */
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      max-height: 11in;
+      margin: 0 auto;
+      padding: 48px 56px;
+      page-break-after: always;
+      position: relative;
+      background: #ffffff;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+
+    .page:last-child {
+      page-break-after: auto;
+    }
+
+    /* On screen, separate pages visually */
+    @media screen {
+      .page {
+        border: 1px solid #d4d4d4;
+        margin-bottom: 24px;
+      }
+    }
+
+    /* --- SECTION LABEL --- */
+    .section-label {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #0B5394;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* --- ACTION TITLE --- */
+    .action-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.35;
+      margin-bottom: 28px;
+      border-bottom: 2px solid #0B5394;
+      padding-bottom: 12px;
+    }
+
+    /* --- KPI CARDS --- */
+    .kpi-row {
+      display: flex;
+      gap: 0;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      flex: 1;
+      padding: 20px 24px;
+      border: 1px solid #d4d4d4;
+      border-right: none;
+      text-align: center;
+    }
+
+    .kpi-card:last-child {
+      border-right: 1px solid #d4d4d4;
+    }
+
+    .kpi-label {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #666666;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0B5394;
+      line-height: 1.1;
+    }
+
+    .kpi-context {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.75rem;
+      color: #666666;
+      margin-top: 4px;
+    }
+
+    /* --- INSIGHT BOX --- */
+    .insight-box {
+      background: #E8F0FE;
+      border-left: 3px solid #0B5394;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+
+    .insight-box p {
+      font-size: 0.875rem;
+      line-height: 1.55;
+    }
+
+    .insight-box strong {
+      font-weight: 700;
+    }
+
+    /* --- TWO-COLUMN LAYOUT --- */
+    .two-col {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    .two-col .col {
+      flex: 1;
+    }
+
+    .col h3 {
+      font-size: 1rem;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    /* --- LISTS --- */
+    ul.bullet-list, ol.step-list {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    ul.bullet-list li, ol.step-list li {
+      margin-bottom: 10px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+
+    ol.step-list li {
+      padding-left: 4px;
+    }
+
+    /* --- NEXT STEPS TABLE --- */
+    .next-steps-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .next-steps-table th {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #666666;
+      text-align: left;
+      padding: 6px 0;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    .next-steps-table td {
+      font-size: 0.875rem;
+      padding: 8px 8px 8px 0;
+      border-bottom: 1px solid #ebebeb;
+      vertical-align: top;
+    }
+
+    /* --- COVER PAGE --- */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 0;
+    }
+
+    .cover-logo {
+      margin-bottom: 64px;
+    }
+
+    .cover-logo img {
+      height: 56px;
+      display: block;
+    }
+
+    .cover-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .cover-subtitle {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 1.0625rem;
+      color: #666666;
+      margin-bottom: 48px;
+      line-height: 1.5;
+    }
+
+    .cover-confidential {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #999999;
+      border-top: 1px solid #d4d4d4;
+      padding-top: 16px;
+      display: inline-block;
+    }
+
+    .cover-divider {
+      width: 64px;
+      height: 3px;
+      background: #0B5394;
+      margin-bottom: 32px;
+    }
+
+    /* --- PAGE FOOTER --- */
+    .page-footer {
+      position: absolute;
+      bottom: 36px;
+      left: 56px;
+      right: 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.625rem;
+      color: #999999;
+      letter-spacing: 0.05em;
+      border-top: 1px solid #d4d4d4;
+      padding-top: 10px;
+    }
+
+    .page-footer span {
+      font-size: 0.625rem;
+      color: #999999;
+    }
+
+    .page-footer a {
+      color: #999999;
+      text-decoration: none;
+    }
+
+    .page-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* --- PLACEHOLDER STYLING --- */
+    .placeholder {
+      color: #0B5394;
+      background: #E8F0FE;
+      padding: 1px 4px;
+      font-weight: 600;
+    }
+
+    /* --- DOWNLOAD BUTTON --- */
+    .download-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 10px 20px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: #0B5394;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: background 0.2s;
+    }
+
+    .download-btn:hover {
+      background: #094075;
+    }
+
+    @page {
+      margin: 0;
+      size: 8.5in 11in;
+    }
+
+    /* --- PRINT STYLES --- */
+    @media print {
+      body {
+        background: none;
+      }
+
+      .page {
+        width: 8.5in;
+        height: 11in;
+        max-height: 11in;
+        margin: 0;
+        padding: 48px 56px;
+        border: none;
+        overflow: hidden;
+        page-break-inside: avoid;
+      }
+
+      .page-footer {
+        position: fixed;
+        bottom: 24px;
+      }
+
+      .download-btn { display: none; }
+    }
+
+    /* --- SUB-SECTION HEADER --- */
+    .sub-section-header {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    /* ======================================================================
+       QUICK REFERENCE — COMPACT OVERRIDES
+       Dense, single-page layout for daily desk reference.
+       ====================================================================== */
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #0B5394;
+    }
+
+    .page-header h1 {
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    .page-header img {
+      height: 22px;
+    }
+
+    .grid-2 {
+      display: flex;
+      gap: 28px;
+    }
+
+    .grid-2 .col {
+      flex: 1;
+    }
+
+    /* Compact sub-section headers */
+    .grid-2 .sub-section-header {
+      font-size: 0.8125rem;
+      margin-top: 0;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+    }
+
+    /* Compact body text */
+    .compact p, .compact li, .compact td, .compact th {
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }
+
+    .compact ol, .compact ul {
+      padding-left: 16px;
+      margin-bottom: 10px;
+    }
+
+    .compact ol li, .compact ul li {
+      margin-bottom: 4px;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+    }
+
+    /* Mini tables */
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    .mini-table th {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #666666;
+      text-align: left;
+      padding: 4px 6px;
+      border-bottom: 1px solid #d4d4d4;
+    }
+
+    .mini-table td {
+      font-size: 0.75rem;
+      padding: 3px 6px;
+      border-bottom: 1px solid #ebebeb;
+      vertical-align: top;
+      line-height: 1.4;
+    }
+
+    .mini-table td:first-child {
+      font-weight: 600;
+    }
+
+    /* Status colors for health score table */
+    .status-green { color: #166534; font-weight: 700; }
+    .status-yellow { color: #B45309; font-weight: 700; }
+    .status-red { color: #991B1B; font-weight: 700; }
+
+    /* Compact bullet list */
+    .compact-bullets {
+      list-style: disc;
+      padding-left: 16px;
+      margin-bottom: 10px;
+    }
+
+    .compact-bullets li {
+      font-size: 0.75rem;
+      line-height: 1.4;
+      margin-bottom: 3px;
+      color: #1a1a1a;
+    }
+
+    /* Escalation path styling */
+    .escalation-path {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      background: #E8F0FE;
+      border-left: 3px solid #0B5394;
+    }
+
+    /* Language do/don't columns */
+    .lang-grid {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .lang-grid .lang-col {
+      flex: 1;
+    }
+
+    .lang-col-header {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 6px;
+      margin-bottom: 4px;
+    }
+
+    .lang-do .lang-col-header {
+      color: #166534;
+      border-bottom: 1px solid #166534;
+    }
+
+    .lang-dont .lang-col-header {
+      color: #991B1B;
+      border-bottom: 1px solid #991B1B;
+    }
+
+    .lang-col ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .lang-col ul li {
+      font-size: 0.6875rem;
+      line-height: 1.4;
+      padding: 2px 6px;
+      color: #1a1a1a;
+    }
+  </style>
+</head>
+<body>
+
+<button class="download-btn" onclick="window.print()">&#8595; Download PDF</button>
+
+  <section class="page compact">
+
+    <div class="page-header">
+      <h1>CSM Quick Reference</h1>
+      <img src="../logos/logo-full-light.png" alt="8020REI">
+    </div>
+
+    <div class="grid-2">
+
+      <!-- ============ LEFT COLUMN ============ -->
+      <div class="col">
+
+        <h3 class="sub-section-header">THE 5 QUESTIONS</h3>
+        <ol style="padding-left: 18px; margin-bottom: 14px;">
+          <li style="font-size: 0.8125rem; line-height: 1.45; margin-bottom: 5px;">What is the <strong>single most important message</strong>?</li>
+          <li style="font-size: 0.8125rem; line-height: 1.45; margin-bottom: 5px;">Who is the <strong>audience</strong> and what do they need to decide?</li>
+          <li style="font-size: 0.8125rem; line-height: 1.45; margin-bottom: 5px;">What are the <strong>2-4 supporting arguments</strong> (MECE)?</li>
+          <li style="font-size: 0.8125rem; line-height: 1.45; margin-bottom: 5px;">What <strong>data</strong> proves each argument?</li>
+          <li style="font-size: 0.8125rem; line-height: 1.45; margin-bottom: 5px;">What is the <strong>recommended next step</strong>?</li>
+        </ol>
+
+        <h3 class="sub-section-header">HEALTH SCORE (1–5)</h3>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Range</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="status-green">Green</td>
+              <td>&ge; 3.5</td>
+            </tr>
+            <tr>
+              <td class="status-yellow">Yellow</td>
+              <td>2.0 – 3.4</td>
+            </tr>
+            <tr>
+              <td class="status-red">Red</td>
+              <td>&lt; 2.0</td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Engagement</td>
+              <td>20%</td>
+            </tr>
+            <tr>
+              <td>Service</td>
+              <td>30%</td>
+            </tr>
+            <tr>
+              <td>Issues</td>
+              <td>30%</td>
+            </tr>
+            <tr>
+              <td>Budget</td>
+              <td>20%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-section-header">RISK FLAGS</h3>
+        <ul class="compact-bullets">
+          <li>Overdue status update</li>
+          <li>No contact &gt; 40 days</li>
+          <li>Low health score (&lt; 2.0)</li>
+          <li>No feedback submission &gt; 40 days</li>
+          <li>Engagement call no-shows</li>
+        </ul>
+
+      </div>
+
+      <!-- ============ RIGHT COLUMN ============ -->
+      <div class="col">
+
+        <h3 class="sub-section-header">KPI TARGETS</h3>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Target</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>MRR Retention</td>
+              <td>97%</td>
+            </tr>
+            <tr>
+              <td>Calls / week (team)</td>
+              <td>40+</td>
+            </tr>
+            <tr>
+              <td>Engagement SLA</td>
+              <td>&le; 40 days</td>
+            </tr>
+            <tr>
+              <td>Feedback SLA</td>
+              <td>&le; 40 days</td>
+            </tr>
+            <tr>
+              <td>Daily calls / CSM</td>
+              <td>4 sched. / 3 completed</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-section-header">ESCALATION PATH</h3>
+        <div class="escalation-path">
+          <strong>CSM</strong> &rarr; <strong>Head of CS</strong> (Thomas) &rarr; <strong>CEO</strong> (Ignacio)
+        </div>
+
+        <h3 class="sub-section-header">TOOLS</h3>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Tool</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Salesmate</td>
+              <td>CRM</td>
+            </tr>
+            <tr>
+              <td>ChargeOver</td>
+              <td>Billing</td>
+            </tr>
+            <tr>
+              <td>Freshdesk</td>
+              <td>Tickets</td>
+            </tr>
+            <tr>
+              <td><a href="https://team.8020rei.com" style="color: #0B5394; text-decoration: none;">Analytics</a></td>
+              <td>BI</td>
+            </tr>
+            <tr>
+              <td><a href="https://opshub.8020rei.com" style="color: #0B5394; text-decoration: none;">Ops Hub</a></td>
+              <td>Ops</td>
+            </tr>
+            <tr>
+              <td><a href="https://feedback.8020rei.com" style="color: #0B5394; text-decoration: none;">Feedback Loop</a></td>
+              <td>Client</td>
+            </tr>
+            <tr>
+              <td>Fathom AI</td>
+              <td>Call QA</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-section-header">LANGUAGE</h3>
+        <div class="lang-grid">
+          <div class="lang-col lang-do">
+            <div class="lang-col-header">DO SAY</div>
+            <ul>
+              <li>"Limited seats"</li>
+              <li>"Reduced competition"</li>
+              <li>"Data-driven intelligence"</li>
+            </ul>
+          </div>
+          <div class="lang-col lang-dont">
+            <div class="lang-col-header">DON'T SAY</div>
+            <ul>
+              <li>"No other client"</li>
+              <li>"Guaranteed results"</li>
+              <li>"Yours alone"</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <footer class="page-footer">
+      <span><a href="https://booking.8020rei.com">8020rei.com</a></span>
+      <span>Confidential</span>
+      <span>Page 1</span>
+    </footer>
+  </section>
+
+
+</body>
+</html>
