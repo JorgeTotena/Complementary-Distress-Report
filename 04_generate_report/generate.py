@@ -388,6 +388,9 @@ def build_html(
 .page-header img  { height: 20px; }
 .page-header span { font-size: 0.75rem; color: #999999; }
 
+/* Hard clip — prevent any content from bleeding past the page boundary */
+.page { overflow: hidden; }
+
 /* Spacing overrides — match FreedomREI reference (proven to fit 11in pages) */
 .action-title  { font-size: 1.2rem; margin-bottom: 24px; padding-bottom: 12px; }
 .kpi-row       { margin-bottom: 28px; }
@@ -813,13 +816,6 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
         </tbody>
       </table>
       {zero_county_flag_html}
-      <h3 style="margin-top:10px">Monthly Sale Volume</h3>
-      <table>
-        <thead><tr><th>Month</th><th class="num">Properties Sold</th></tr></thead>
-        <tbody>
-          {monthly_rows_html()}
-        </tbody>
-      </table>
     </div>
     <div class="col">
       <h3>Buyer Type &mdash; Who Purchased These Properties</h3>
@@ -835,6 +831,13 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
         acquisition teams &mdash; advantages that only close the window faster once a property
         is identified.
       </p>
+      <h3 style="margin-top:10px">Monthly Sale Volume</h3>
+      <table>
+        <thead><tr><th>Month</th><th class="num">Properties Sold</th></tr></thead>
+        <tbody>
+          {monthly_rows_html()}
+        </tbody>
+      </table>
     </div>
   </div>
   <footer class="page-footer">

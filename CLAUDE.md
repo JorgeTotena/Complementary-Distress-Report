@@ -55,94 +55,55 @@ Previous client reports live at:
 
 ### Steps 1, 2 & 3 — Run the pipeline (human task)
 
-```
-python main.py
+```bash
+python main.py "Client Name"
 ```
 
-The script will ask for the client name, then:
+This runs all three steps automatically:
 1. Merge all monthly fulfillment xlsx files from `01_fulfillment_merger/input/`
-2. Auto-copy the merged file and join it with the COO file in `02_data_preparation/input/`; output `Data ready for analysis.xlsx` in `02_data_preparation/output/`
+2. Pass merged data in-memory to join with the COO file in `02_data_preparation/input/`; output `Data ready for analysis.xlsx` in `02_data_preparation/output/`
 3. Read the full COO-format file from `03_distress_overview/input/` and compute the distress signal universe counts by county; output `Distress Overview.xlsx` in `03_distress_overview/output/`
 
-The output file has two sheets:
-- `Fulfillment properties` — all rows (225K+)
-- `Sold properties on fulfillment` — only rows that matched a COO record
+`Data ready for analysis.xlsx` contains one sheet:
+- `Sold properties on fulfillment` — only rows that matched a COO record AND have a LAST SALE DATE
 
-### Step 4 — Run the analysis and generate the report (Claude task)
+The total fulfillment row count is stored separately in `02_data_preparation/output/fulfillment_row_count.txt`.
 
-Once `Data ready for analysis.xlsx` and `Distress Overview.xlsx` both exist, Claude performs the analysis and generates the report. **The PDF is the final deliverable.** The HTML is an intermediate artifact used only to produce the PDF — do not open it in a browser or attempt to debug its browser rendering. Follow this sequence:
+### Step 4 — Generate the report (Claude task)
 
-#### 4a. Determine the analysis window
-Per protocol Section 2.1: standard window = 6 months ending 3 months before the report date.
-- Report in March 2026 → window = July–December 2025
-- Document the agreed window before proceeding.
-
-#### 4b. Load the data and apply filters
-Read `02_data_preparation/output/Data ready for analysis.xlsx`, sheet `Sold properties on fulfillment`.
-
-**Inclusion filter:** LAST SALE DATE must fall within the analysis window.
-
-**Signal reading rule (critical):** Read distress signals from the row where PERIOD matches the MARKETING FIRST RECOMMENDATION month. If no exact match exists (MFR falls outside the data window), use the closest available period. See `analysis_notes.md` for full details.
-
-#### 4c. Run the signal analysis
-Count active signals per property. See `analysis_notes.md` for encoding rules and column list.
-
-#### 4d. Load the Distress Overview breakdown
-Read `03_distress_overview/output/Distress Overview.xlsx`. This file is a **current-state platform snapshot** — it is completely independent from the fulfillment analysis.
-
-- Sheet `By County` — active signal counts per county (one row per county)
-- Sheet `Total` — signal counts across all counties combined
-
-**Important:** This file is used **only** to populate the Distress Universe table on Page 4. It does not affect which properties are included in the analysis, which signals are counted as active on sold properties, or any other analytical result. All analytical output comes from `02_data_preparation/output/Data ready for analysis.xlsx`.
-
-#### 4e. Generate the HTML (intermediate artifact)
-- Read the design system: `../8020REI-skills-main/8020REI-skills-main/customer_success/standards/DESIGN_SYSTEM.md`
-- Read the CSS: `../8020REI-skills-main/8020REI-skills-main/customer_success/standards/report.css`
-- Use the FreedomREI report as the structural reference: `../8020REI-skills-main/8020REI-skills-main/customer_success/clients/freedomrei/2026-03-distress-analysis.html`
-- Read the client's `context.md` before generating (if it exists)
-- Save the HTML to: `../8020REI-skills-main/8020REI-skills-main/customer_success/clients/<client-slug>/YYYY-MM-distress-analysis.html`
-- Logo paths in the HTML must be `../../logos/logo-full-light.png` (cover) and `../../logos/logo-icon-light.png` (page headers) — relative to the client subfolder, two levels up to `customer_success/`
-- **Do not open the HTML in a browser.** It is an intermediate artifact only.
-- All pages must fit within `max-height: 11in` — author the content accordingly. Do not rely on browser preview to check fit.
-- Cover footer and all page footers: use "FreedomREI" (or the client name) as the center label — not "Confidential" or "Internal". This is a client-facing report.
-
-#### 4f. Export the PDF (final deliverable)
-Start a local HTTP server rooted at `customer_success/` so logo relative paths resolve correctly, then use Playwright to export:
+Once `Data ready for analysis.xlsx` and `Distress Overview.xlsx` both exist, run:
 
 ```bash
-# From historical_distress_report/
-cd ../8020REI-skills-main/8020REI-skills-main/customer_success
-python -m http.server 8766 &
+python 04_generate_report/generate.py "Client Name" clientslug --window YYYY-MM YYYY-MM
 ```
 
-Then in Claude Code with Playwright MCP:
-```js
-async (page) => {
-  await page.goto('http://localhost:8766/clients/<client-slug>/YYYY-MM-distress-analysis.html');
-  await page.waitForLoadState('networkidle');
-  await page.pdf({
-    path: 'path/to/clients/<client-slug>/YYYY-MM-distress-analysis.pdf',
-    format: 'Letter',
-    printBackground: true,
-    margin: { top: '0', right: '0', bottom: '0', left: '0' }
-  });
-}
+Example for FreedomREI (Jul–Dec 2025 window):
+```bash
+python 04_generate_report/generate.py "FreedomREI" freedomrei --window 2025-07 2025-12
 ```
 
-Save the PDF in **two locations**:
-1. Alongside the HTML in the client folder: `clients/<client-slug>/YYYY-MM-distress-analysis.pdf`
-2. In the pipeline working directory: `historical_distress_report/YYYY-MM-<client-slug>-distress-analysis.pdf`
+**Output** — both files go to the pipeline root (`historical_distress_report/`):
+- `YYYY-MM-distress-analysis-{slug}.html`
+- `YYYY-MM-distress-analysis-{slug}.pdf` ← **this is the file sent to the client**
 
-**The PDF is the file that gets sent to the client.**
+Logos are embedded as base64 — no HTTP server needed.
 
-**Report structure (4 pages + annex):**
-- Page 1: Cover — Pyramid Principle title stating the conclusion
-- Page 2: Signal Analysis — KPI cards, bar chart of active signals, signal stack distribution
-- Page 3: Market Context — county breakdown by signal, buyer type split (Individual / Company / Trust), monthly sale volume
-- Page 4: Recommendations — signal-stack tiers, Rapid Response, Niche Lists, Distress Overview universe table, Next Steps table
+**Analysis window rule:** Standard = 6 months ending 3 months before the report date.
+- Report in March 2026 → `--window 2025-07 2025-12`
+
+All data methodology (signal reading rule, inclusion filter, encoding rules) is handled automatically by `generate.py`. See `analysis_notes.md` for the full methodology reference.
+
+**Report structure (4 pages + signal breakdown section + annex):**
+- Page 1: Cover — Atlas-style title (see `analysis_notes.md` Section 9)
+- Page 2: Situation & Key Finding — KPI cards, bar chart of active signals, signal stack distribution
+- Page 3: Supporting Evidence — county breakdown (left col), buyer type + monthly sale volume (right col)
+- Page 4: Recommendations — signal-stack tiers, Rapid Response, Niche Lists, Distress Universe table, Next Steps
+- Signal breakdown section: full signal × county table (flows across pages as needed)
 - Annex: All matched properties sorted by county, with active signals at delivery
 
-The HTML is a single self-contained file (CSS inline, logos referenced by relative path). Use Python to build the annex table from the data and inject it into the HTML.
+**Page 3 layout rule:** Monthly Sale Volume always goes in the **right column**, below the Buyer Type table and paragraph. Never stack it below County Breakdown in the left column — the left column is already near capacity with the county table.
+
+**Overflow safeguard:** `.page { overflow: hidden; }` is set in the CSS. If content is too tall for a page it will be clipped visibly in the HTML, signalling that the layout needs adjustment. Fix the layout in `generate.py` — do not rely on clipping as a permanent solution.
 
 ---
 

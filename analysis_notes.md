@@ -104,12 +104,13 @@ Note: `MARKETING DM COUNT` is renamed to `COO MARKETING DM COUNT` to avoid colli
 
 ## 7. Output File Structure
 
-`Data ready for analysis.xlsx` has two sheets:
+`Data ready for analysis.xlsx` has one sheet:
 
 | Sheet name | Contents |
 |---|---|
-| `Fulfillment properties` | All rows from the merged fulfillment file (225K+ rows for FreedomREI) |
 | `Sold properties on fulfillment` | Only rows that matched a COO record AND have a LAST SALE DATE |
+
+The full merged fulfillment data (all rows) already exists as the Step 1 output in `01_fulfillment_merger/output/` — re-writing it to Step 2 output was redundant and slow. The total fulfillment row count is stored in `02_data_preparation/output/fulfillment_row_count.txt` and read by `generate.py` for the cover KPI card.
 
 The analysis is performed exclusively on `Sold properties on fulfillment`.
 
@@ -175,11 +176,26 @@ For flowing sections (signal breakdown, recommendations, annex): use `.flow-foot
 
 ### Writing style
 
-Use the Atlas Residential report style for all headers:
+Use the Atlas Residential report style for all headers. Do **not** use long Pyramid Principle conclusion sentences as titles.
+
 - **Cover title:** "Of the [N] properties on [Client]'s fulfillment list that were sold during this period, these are the distress signals that were active at the time of delivery"
-- **Page 2 (Situation & Key Finding):** "At [Client]'s request, 8020REI reviewed [N] fulfillment properties confirmed sold between [dates] — [Top1] and [Top2] were the most consistently active signals at the time of delivery"
-- **Page 3 (Supporting Evidence):** "[County A] and [County B] show the same signal pattern — [Top1] + [Top2] — confirming the finding holds across [Client]'s active markets"
-- **Page 4 (Recommendations):** "When [Client] takes action now to convert more properties from the fulfillment list into conversations, they can get more deals"
+- **Page 2 — section label:** SITUATION & KEY FINDING
+- **Page 2 title:** "At [Client]'s request, 8020REI reviewed [N] fulfillment properties confirmed sold between [Month Year] and [Month Year] — [Top1] and [Top2] were the most consistently active signals at the time of delivery"
+- **Page 3 — section label:** SUPPORTING EVIDENCE
+- **Page 3 title:** "[County A] and [County B] show the same signal pattern — [Top1] + [Top2] — confirming the finding holds across [Client]'s active markets"
+- **Page 4 — section label:** RECOMMENDATIONS
+- **Page 4 title:** "Acting on these findings now gives [Client] a direct path to more closed deals — prioritising the right signals, responding faster, and reaching motivated sellers before competing buyers engage."
+
+Avoid: "When [Client] takes action... they can get more deals" — mixes singular company name with plural pronoun and sounds too casual.
+
+### Page 3 layout
+
+Page 3 uses a two-column layout:
+
+- **Left column:** County Breakdown table (+ amber flag box if any BuyBox county had zero matched sales)
+- **Right column:** Buyer Type table → investor entity note paragraph → Monthly Sale Volume table
+
+Monthly Sale Volume must always go in the **right column**, below Buyer Type. Never place it below County Breakdown in the left column — the left column is already near capacity with the county table and any zero-county flag boxes. Stacking both tables in the left column causes the page to overflow.
 
 ---
 

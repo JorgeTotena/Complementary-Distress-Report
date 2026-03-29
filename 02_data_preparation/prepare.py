@@ -58,7 +58,13 @@ def find_coo_file() -> Path:
     'COO' or 'sold' (case-insensitive). If not found, prompts the user.
     """
     all_xlsx = sorted(INPUT_DIR.glob("*.xlsx"))
-    fulfillments_file = find_fulfillments_file()
+
+    # Try to exclude the fulfillments file, but don't fail if it isn't there
+    # (it may have been passed in-memory from the merge step)
+    try:
+        fulfillments_file = find_fulfillments_file()
+    except FileNotFoundError:
+        fulfillments_file = None
 
     # Exclude the fulfillments file itself
     candidates = [
