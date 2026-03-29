@@ -110,10 +110,11 @@ def normalize_keys(df: pd.DataFrame, keys: list) -> pd.DataFrame:
     return df
 
 
-def run(client_name: str, fulfillments_path: Path) -> Path:
+def run(client_name: str, fulfillments_source, fulfillments_path: Path = None) -> Path:
     """
     Join merged fulfillments with COO file and write the output.
-    Returns the path of the output file.
+    fulfillments_source may be a pre-loaded DataFrame (passed from merge step)
+    or a Path (for standalone use). Returns the path of the output file.
     """
     print()
     print("=" * 60)
@@ -122,23 +123,25 @@ def run(client_name: str, fulfillments_path: Path) -> Path:
     print("=" * 60)
     print(f"\nStarting data preparation for {client_name}...\n")
 
-    # -- Auto-copy merged fulfillments from step 1 if not already present -----
-    dest_fulfillments = INPUT_DIR / fulfillments_path.name
-    if not dest_fulfillments.exists():
-        print(f"Copying merged fulfillments to input/...")
-        shutil.copy2(fulfillments_path, dest_fulfillments)
-        print(f"  [OK] {fulfillments_path.name} copied to 02_data_preparation/input/")
-    else:
-        print(f"  [OK] Fulfillments already present: {dest_fulfillments.name}")
-
     # -- Locate COO file -------------------------------------------------------
     coo_path = find_coo_file()
     print(f"  [OK] COO file: {coo_path.name}")
 
-    # -- Read files ------------------------------------------------------------
-    print(f"\nReading merged fulfillments...")
-    fulfillments = pd.read_excel(dest_fulfillments, dtype=str)
-    print(f"  {len(fulfillments):,} rows, {len(fulfillments.columns)} columns")
+    # -- Read / receive fulfillments -------------------------------------------
+    if isinstance(fulfillments_source, pd.DataFrame):
+        # DataFrame passed in-memory from merge step — no file I/O needed
+        fulfillments = fulfillments_source.copy()
+        print(f"\nUsing in-memory merged fulfillments ({len(fulfillments):,} rows)")
+    else:
+        # Fallback: treat fulfillments_source as a Path
+        src_path = Path(fulfillments_source)
+        dest_fulfillments = INPUT_DIR / src_path.name
+        print(f"Copying merged fulfillments to input/...")
+        shutil.copy2(src_path, dest_fulfillments)
+        print(f"  [OK] {src_path.name} copied to 02_data_preparation/input/")
+        print(f"\nReading merged fulfillments...")
+        fulfillments = pd.read_excel(dest_fulfillments, dtype=str)
+        print(f"  {len(fulfillments):,} rows, {len(fulfillments.columns)} columns")
 
     print(f"Reading COO file...")
     coo = pd.read_excel(coo_path, dtype=str)
@@ -179,14 +182,19 @@ def run(client_name: str, fulfillments_path: Path) -> Path:
     output_file = OUTPUT_DIR / "Data ready for analysis.xlsx"
 
     print(f"\nWriting output: {output_file.name} ...")
+    # Write only the sold properties sheet (the full merged data already
+    # exists as the Step 1 output — re-writing 90K+ rows here was the main
+    # speed bottleneck with no analytical benefit).
     with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
-        merged.to_excel(writer, sheet_name="Fulfillment properties", index=False)
         sold.to_excel(writer, sheet_name="Sold properties on fulfillment", index=False)
+
+    # Persist the total fulfillment row count for the report generator.
+    (OUTPUT_DIR / "fulfillment_row_count.txt").write_text(str(len(merged)))
 
     print(f"\n[OK] Data ready for analysis.")
     print(f"  Output : {output_file}")
-    print(f"  Sheet 1 -- Fulfillment properties       : {len(merged):,} rows")
-    print(f"  Sheet 2 -- Sold properties on fulfillment: {len(sold):,} rows")
+    print(f"  Fulfillment properties (total) : {len(merged):,} rows  [count stored in fulfillment_row_count.txt]")
+    print(f"  Sold properties on fulfillment : {len(sold):,} rows  [written to Excel]")
 
     return output_file
 

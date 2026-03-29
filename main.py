@@ -28,6 +28,7 @@ Expected structure:
       analyze.py
 """
 
+import argparse
 import importlib.util
 import sys
 from pathlib import Path
@@ -41,12 +42,25 @@ def load_module(name: str, path: Path):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Fulfillment Distress Analysis — pipeline (steps 1, 2, 3)"
+    )
+    parser.add_argument(
+        "client_name",
+        nargs="?",
+        default=None,
+        help="Client name (e.g. 'SOS Home Offers'). Prompts if omitted.",
+    )
+    args = parser.parse_args()
+
     print()
     print("=" * 60)
     print("  FULFILLMENT DISTRESS ANALYSIS -- PIPELINE")
     print("=" * 60)
 
-    client_name = input("\nClient name: ").strip()
+    client_name = args.client_name
+    if not client_name:
+        client_name = input("\nClient name: ").strip()
     if not client_name:
         print("[ERROR] Client name cannot be empty.")
         sys.exit(1)
@@ -62,7 +76,7 @@ def main():
     # -- STEP 1: Merge fulfillments -------------------------------------------
     try:
         merge_mod = load_module("merge", root / "01_fulfillment_merger" / "merge.py")
-        merged_output = merge_mod.run(client_name)
+        merged_df, merged_output = merge_mod.run(client_name)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
@@ -70,7 +84,7 @@ def main():
     # -- STEP 2: Data preparation ---------------------------------------------
     try:
         prepare_mod = load_module("prepare", root / "02_data_preparation" / "prepare.py")
-        prepare_mod.run(client_name, merged_output)
+        prepare_mod.run(client_name, merged_df)
     except (FileNotFoundError, ValueError) as e:
         print(e)
         sys.exit(1)

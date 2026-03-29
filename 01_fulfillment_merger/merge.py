@@ -69,9 +69,10 @@ def run(client_name: str) -> Path:
     print(f"  Periods       : {', '.join(periods)}")
     print(f"  Output        : {output_file}")
 
-    return output_file
+    return merged, output_file
 
 
 if __name__ == "__main__":
     client = input("\nClient name: ").strip() or "Client"
-    run(client)
+    _, out = run(client)
+    print(f"\nOutput file: {out}")

@@ -137,7 +137,70 @@ The entire sold properties analysis (signal counts, percentages, county breakdow
 
 ---
 
-## 9. FreedomREI Baseline Numbers (March 2026)
+## 9. Report Structure Rules (confirmed March 2026)
+
+### County tiering — based on counties WITH active matched sales, not total BuyBox counties
+
+The number of counties that drives report structure is the count of counties where at least one property sold during the analysis window — not the total number of counties in the client's BuyBox.
+
+| Matched counties with sales | Report structure |
+|---|---|
+| 2–4 | Standard (4 pages + signal breakdown section + annex). Side-by-side county comparison on Page 3. |
+| 5–6 | Adapted Page 3. Replace county comparison with ranked summary table (top 3 signals + count per county). Signal breakdown table unchanged. |
+| 7+ | Portfolio report + one-page county brief per FIPS as numbered appendix sections. |
+
+Counties in the BuyBox with **zero matched transactions** during the window:
+- Still appear in the county breakdown table on Page 3 (showing "No matched transactions this period")
+- Are **excluded** from signal breakdown table columns (adding empty columns adds noise, not information)
+- Are **flagged** with an amber insight box on Page 3 noting the gap and recommending the follow-up analysis will clarify whether it's a quiet period or a structural market gap
+- Are included in the KPI county count (reflects the actual BuyBox scope)
+
+### Annex date format
+
+Marketing First Recommendation shows **month + year only** (e.g., "Oct 2025"), not the exact day.
+
+**Why:** County recording lag means properties close 1–30 days before the transaction appears in public records. Showing an exact day could make it look like the recommendation arrived late when the delay is structural, not a platform issue. Month + year gives enough precision for the client to compare to the sale date without creating a false impression of tardiness.
+
+Format: `mfr.strftime("%b %Y")`
+
+### Zero-signal properties
+
+Do **not** mention the count or percentage of properties with zero active signals anywhere in the report narrative. Focus only on properties that carried signals. The signal stack distribution table may still show the 0-signal row as raw data, but it must never be called out in the text.
+
+### Footer
+
+Footer center label = client name (never "Confidential" or "Internal"). This is a client-facing report.
+
+For flowing sections (signal breakdown, recommendations, annex): use `.flow-footer` class (static `<div>`) not `.page-footer` (which is `position: fixed` in print and repeats on every page).
+
+### Writing style
+
+Use the Atlas Residential report style for all headers:
+- **Cover title:** "Of the [N] properties on [Client]'s fulfillment list that were sold during this period, these are the distress signals that were active at the time of delivery"
+- **Page 2 (Situation & Key Finding):** "At [Client]'s request, 8020REI reviewed [N] fulfillment properties confirmed sold between [dates] — [Top1] and [Top2] were the most consistently active signals at the time of delivery"
+- **Page 3 (Supporting Evidence):** "[County A] and [County B] show the same signal pattern — [Top1] + [Top2] — confirming the finding holds across [Client]'s active markets"
+- **Page 4 (Recommendations):** "When [Client] takes action now to convert more properties from the fulfillment list into conversations, they can get more deals"
+
+---
+
+## 10. SOS Home Offers Baseline Numbers (March 2026)
+
+| Metric | Value |
+|---|---|
+| Total fulfillment rows | 93,053 |
+| Sold properties in window | 104 |
+| Analysis window | Oct–Dec 2025 (3-month pilot) |
+| Properties with MFR fallback | 8 (MFR = Nov 2024, prior to window) |
+| BuyBox counties | 4 (Columbia, Richmond, Aiken, Edgefield) |
+| Matched counties (active sales) | 3 (Columbia 48, Richmond 46, Aiken 10) |
+| Edgefield matched | 0 (flagged in report) |
+| Top signal | High Equity (32.7%) |
+| Second signal | 55+ (31.7%) |
+| Third signal | Absentee (30.8%) |
+
+---
+
+## 11. FreedomREI Baseline Numbers (March 2026)
 
 For reference when sanity-checking future runs:
 
