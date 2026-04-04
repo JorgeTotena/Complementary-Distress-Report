@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import datetime
 import socket
 import subprocess
 import sys
@@ -1041,7 +1042,9 @@ def main() -> None:
         "--window", nargs=2, metavar=("START", "END"), default=[None, None],
         help="Analysis window YYYY-MM YYYY-MM, e.g. --window 2025-10 2025-12",
     )
-    parser.add_argument("--report-date", default="March 2026")
+    _today = datetime.date.today()
+    _default_report_date = _today.strftime("%B %Y")
+    parser.add_argument("--report-date", default=_default_report_date)
     parser.add_argument("--window-label", default=None)
     args = parser.parse_args()
 
