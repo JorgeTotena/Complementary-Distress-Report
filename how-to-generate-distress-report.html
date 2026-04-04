@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Generate the Fulfillment Distress Analysis Report — 8020REI</title>
+<style>
+/* ======================================================================
+   8020REI Report CSS Framework — Unified
+   ====================================================================== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #1a1a1a; background: #ffffff; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
+h1 { font-size: 2.25rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; letter-spacing: -0.01em; }
+h3 { font-size: 1.125rem; }
+p, li, td, th { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 0.9375rem; color: #1a1a1a; line-height: 1.6; }
+
+/* PAGE */
+.page {
+  width: 8.5in; min-height: 11in; max-height: 11in;
+  margin: 0 auto; padding: 48px 56px;
+  page-break-after: always; page-break-inside: avoid;
+  position: relative; background: #ffffff; overflow: hidden;
+}
+.page:last-child { page-break-after: auto; }
+@media screen {
+  .page { border: 1px solid #d4d4d4; margin-bottom: 24px; }
+}
+
+/* PAGE HEADER */
+.page-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+}
+.page-logo { height: 20px; }
+.page-date { font-size: 10px; color: #a3a3a3; }
+
+/* SECTION LABEL */
+.section-label {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.15em;
+  text-transform: uppercase; color: #0B5394; margin-bottom: 8px; display: block;
+}
+
+/* ACTION TITLE */
+.action-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem; font-weight: 700; color: #1a1a1a;
+  line-height: 1.35; margin-bottom: 16px;
+  border-bottom: 2px solid #0B5394; padding-bottom: 10px;
+}
+
+/* COVER */
+.cover { display: flex; flex-direction: column; justify-content: center; padding-top: 60px; }
+.cover-logo { margin-bottom: 72px; }
+.cover-logo img { height: 52px; display: block; }
+.cover-divider { width: 64px; height: 3px; background: #0B5394; margin-bottom: 32px; }
+.cover-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.25rem; font-weight: 700; color: #1a1a1a;
+  line-height: 1.15; margin-bottom: 20px; letter-spacing: -0.02em;
+}
+.cover-subtitle {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 1rem; color: #666666; margin-bottom: 56px; line-height: 1.55;
+}
+.cover-meta {
+  display: flex; gap: 40px; border-top: 1px solid #d4d4d4; padding-top: 20px;
+}
+.cover-meta-item {}
+.cover-meta-label {
+  font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: #999999; margin-bottom: 4px;
+}
+.cover-meta-value { font-size: 0.9375rem; color: #1a1a1a; font-weight: 600; }
+
+/* INSIGHT BOX */
+.insight-box {
+  background: #E8F0FE; border-left: 3px solid #0B5394;
+  padding: 10px 16px; margin-bottom: 14px;
+}
+.insight-box p { font-size: 0.8125rem; line-height: 1.5; }
+.insight-box strong { font-weight: 700; }
+.insight-box.warn { border-left-color: #B45309; background: #FEF3C7; }
+.insight-box.positive { border-left-color: #166534; background: #DCFCE7; }
+
+/* PHASE BLOCK */
+.phase-block {
+  padding: 12px 16px; border-left: 3px solid #0B5394;
+  background: #E8F0FE; margin-bottom: 10px;
+}
+.phase-num {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #0B5394; margin-bottom: 3px;
+}
+.phase-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13.5px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px;
+}
+.phase-text { font-size: 12.5px; line-height: 1.5; color: #2d2d2d; }
+.phase-text code {
+  font-family: 'Courier New', monospace; font-size: 12px;
+  background: #d4e3f8; padding: 1px 5px; border-radius: 2px; color: #0B5394;
+}
+
+/* CODE BLOCK */
+.code-block {
+  background: #1a1a1a; color: #e8e8e8; padding: 12px 16px;
+  font-family: 'Courier New', monospace; font-size: 12px;
+  line-height: 1.6; margin-bottom: 12px; border-radius: 2px;
+}
+.code-block .comment { color: #888; }
+.code-block .cmd { color: #7dd3c8; }
+.code-block .arg { color: #fbbf24; }
+.code-block .flag { color: #a5b4fc; }
+.code-block .value { color: #86efac; }
+
+/* TABLES */
+table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+table th {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #666666; text-align: left;
+  padding: 8px 8px 8px 0; border-bottom: 2px solid #1a1a1a;
+}
+table td {
+  font-size: 0.875rem; padding: 8px 8px 8px 0;
+  border-bottom: 1px solid #ebebeb; color: #2d2d2d; vertical-align: top;
+}
+table tr:last-child td { border-bottom: none; }
+table tr:nth-child(even) td { background: #F9FAFB; }
+td code {
+  font-family: 'Courier New', monospace; font-size: 11.5px;
+  background: #f0f4ff; padding: 1px 5px; color: #0B5394;
+}
+
+/* LISTS */
+ul.bullet-list { list-style: none; padding: 0; margin-bottom: 14px; }
+ul.bullet-list li {
+  font-size: 0.9rem; line-height: 1.5; color: #2d2d2d;
+  padding-left: 16px; position: relative; margin-bottom: 7px;
+}
+ul.bullet-list li::before {
+  content: ''; position: absolute; left: 0; top: 9px;
+  width: 5px; height: 5px; background: #0B5394; border-radius: 50%;
+}
+ul.bullet-list li strong { color: #1a1a1a; }
+
+ol.step-list { list-style: none; counter-reset: step; padding: 0; margin-bottom: 14px; }
+ol.step-list li {
+  counter-increment: step; display: flex; gap: 10px;
+  align-items: flex-start; margin-bottom: 6px;
+  font-size: 0.85rem; color: #2d2d2d; line-height: 1.45;
+}
+ol.step-list li::before {
+  content: counter(step);
+  font-family: Georgia, 'Times New Roman', serif;
+  min-width: 22px; height: 22px; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #0B5394;
+  border: 1.5px solid #0B5394; border-radius: 50%; flex-shrink: 0;
+}
+
+/* TWO-COL */
+.two-col { display: flex; gap: 28px; margin-bottom: 14px; }
+.two-col .col { flex: 1; }
+.col h3 { font-size: 0.95rem; margin-bottom: 12px; padding-bottom: 7px; border-bottom: 1px solid #d4d4d4; }
+
+/* SUB-SECTION HEADER */
+.sub-section-header {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 0.95rem; font-weight: 700; color: #1a1a1a;
+  margin-top: 12px; margin-bottom: 8px;
+  padding-bottom: 5px; border-bottom: 1px solid #d4d4d4;
+}
+
+/* DIVIDER */
+.divider { border-top: 1px solid #d4d4d4; margin: 16px 0; }
+
+/* BODY TEXT */
+.body-text { font-size: 0.9rem; line-height: 1.65; color: #2d2d2d; margin-bottom: 14px; }
+.body-sm { font-size: 0.8rem; line-height: 1.6; color: #6b6b6b; }
+
+/* PAGE FOOTER */
+.page-footer {
+  position: absolute; bottom: 32px; left: 56px; right: 56px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.625rem; color: #999999; letter-spacing: 0.05em;
+  border-top: 1px solid #d4d4d4; padding-top: 10px;
+}
+
+/* INLINE CODE */
+code {
+  font-family: 'Courier New', monospace; font-size: 12px;
+  background: #f0f4ff; padding: 1px 5px; color: #0B5394;
+}
+
+/* DOWNLOAD BTN */
+.download-btn {
+  position: fixed; top: 20px; right: 20px; z-index: 1000;
+  padding: 10px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 0.8rem; font-weight: 600; color: #ffffff; background: #0B5394;
+  border: none; cursor: pointer; letter-spacing: 0.05em; transition: background 0.2s;
+}
+.download-btn:hover { background: #094075; }
+
+/* PRINT */
+@page { margin: 0; size: 8.5in 11in; }
+@media print {
+  body { background: none; }
+  .download-btn { display: none; }
+  .page { width: 8.5in; height: 11in; max-height: 11in; margin: 0; padding: 48px 56px; border: none; overflow: hidden; page-break-inside: avoid; }
+}
+
+/* FOLDER TREE */
+.folder-tree {
+  font-family: 'Courier New', monospace; font-size: 11.5px;
+  line-height: 1.75; color: #2d2d2d; background: #F9FAFB;
+  border: 1px solid #e8e8e8; padding: 14px 18px; margin-bottom: 14px;
+}
+.folder-tree .dir { color: #0B5394; font-weight: 700; }
+.folder-tree .comment-inline { color: #888; }
+
+/* BADGE */
+.badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 8px;
+  border-radius: 2px; margin-right: 6px;
+}
+.badge-blue { background: #E8F0FE; color: #0B5394; }
+.badge-green { background: #DCFCE7; color: #166534; }
+.badge-amber { background: #FEF3C7; color: #B45309; }
+</style>
+</head>
+<body>
+
+<button class="download-btn" onclick="window.print()">&#8595; Save as PDF</button>
+
+<!-- ================================================================
+     PAGE 1 — COVER
+     ================================================================ -->
+<section class="page cover">
+  <div class="cover-logo">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA1wAAAEECAYAAAA8pzV3AAAsiklEQVR42uzdP3IbyZbv8VQ/xVg3oilnXJXsMUStQKD3PJErEGCPIXIFJFdA0mib0AoIrYDQCggaY6vaHuOiI641MdHv5REOWhCbAKqAqjz55/uJQOj27XsFIJGVmb/MrCznAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWntBEZTrH//4jwP/R/Wvf/3XbN3/5uVvf1byv1n+8//+5y9TSg4AAABo5iVFUESwGmhoktd7/5Kgdaj/WgLU0Yb/+9C/zlcC2Oq/m/vXMqx9Xfn7ah/MakoeAAAABC7kFq4kTA00WA1WglUflu/lVv48XwlmUw1kEsZmhDAAAAAQuJBiyJKw82HHgDXv8aMN9HWqIUwC10QD2NQHsDm/HgAAAAhciDFkHWvIkj8P9virHgN+7ErD1zKASfj6IiGM8AUAAAACF6xDlqxefXSL+6oOMvhKx/q6XYYvH7zG/NIAAAAgcCFk0Bpq0Bpk/DW/hy8fvK78nxK6brjnCwAAAAQu9BWyZAXrVINWVdBXX37vU131uuEoegAAABC40HXQ+uTy2Da4j+WqlwSuS4IXAAAACFwgaHVvIC+CFwAAAFLzC0UQRdga+j++ucUzrAhbm4PXvQ9e8jqkOAAAAEDgwqagNfCvB/8fbwlarYPXgxyw4V+UGwAAAAhceBq8ZKVLVrwOKI3Wpm6xqlVTFAAAACBwYV3okrAlq11DSqOR2rF9EAAAAAQuAIC1dgAAAtZJREFUtAxelVusdhG81getS456BwAAAIELBC+CFgAAAAhciDx4fdLgVeI9XlP/uvFBa0JtAAAAAIELfQUvCVvHGr5yP9Vw7l8SsC45DAMAAAAELoQOXxK4PmoAqzL6ahKyvrBtEAAAAAQuEL46DFnypw9ac35RAAAAELgQc/ga+Nd7DWAxmrnFfVlfuS8LAAAABC7kEMDeusV9X6Hv/ZprwPq6DFqsYgEAAIDAhdxDWKXh69eVEDbY8a+s9SVB6nElZM0IVwAAAACBC38PZQdu/WrY3AepGaUEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9Ob/CzAAmbLRgqSgfqoAAAAASUVORK5CYII=" alt="8020REI">
+  </div>
+  <div class="cover-divider"></div>
+  <div class="cover-title">How to Generate the Fulfillment Distress Analysis Report Using Claude Code</div>
+  <div class="cover-subtitle">
+    A step-by-step workflow guide for 8020REI team members — from raw data files to a client-ready PDF report.
+  </div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Document Type</div>
+      <div class="cover-meta-value">Internal Workflow Guide</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Pipeline Version</div>
+      <div class="cover-meta-value">1.0 — April 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Tool Required</div>
+      <div class="cover-meta-value">Claude Code (CLI)</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>8020REI — Internal Use Only</span>
+    <span>Fulfillment Distress Analysis Pipeline</span>
+    <span>1</span>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     PAGE 2 — OVERVIEW & PREREQUISITES
+     ================================================================ -->
+<section class="page">
+  <div class="page-header">
+    <img class="page-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA1wAAANcCAYAAABL5a7EAAA5tklEQVR42uzdP2wcR54v8LaXEPaAAZabGJdtK2awVHaZRtlmprN3kUfZAxxYyu4iSeFFkgIC7yJR0XsvEpVdplH0NhMdMNY4O8CBaWCCO8Hgvv5xeqyRlv/ZPd1d9fkAg+HtLnD2T2J1fbuqflUUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAW+UAIALjIabW1XX5vVp6w/0/n8cNrVP8/G7vG4+hpf8n9+2j/n0a/ffXngTxaA1p9ZSgDASqBahpi79ff4ikFmXeKf69El/7ePzght5/37zKrPjys/z+qfD6qgduRvDAACFwCfh6qyWKxORVj5Q/XZrj+bqnNhuPw8qEXoWq6QvV0NbFUgmyolAAIXQB7B6k8rP9Oc1dXA5fejlUC2DGARzH4oPq6SWSEDELgAGFC4Wq5S/bmwYtU3yyC288mDd/d4uToWAezHOpgJYgACFwA9C1djVRmkzc/+7B59FsTi80MdwjT2ABC4AIYYsn..." alt="8020REI" style="height:20px">
+    <span class="page-date">April 2026</span>
+  </div>
+
+  <span class="section-label">Overview</span>
+  <div class="action-title">The pipeline answers a single question: what distress signals were active on fulfilled properties at the moment they were delivered — and subsequently sold?</div>
+
+  <div class="body-text">
+    This guide walks through every step required to produce a <strong>Fulfillment Distress Analysis</strong> report for any 8020REI client. Steps 1–3 are automated Python scripts run by the team member. Step 4 is a Claude Code task that reads the prepared data, runs the analysis, and generates the final HTML + PDF report.
+  </div>
+
+  <div class="insight-box">
+    <p><strong>What Claude Code does:</strong> It reads the two output files from the pipeline, computes all distress signal statistics, constructs the full multi-page report (HTML), and exports it as a print-ready PDF. No manual analysis or formatting is needed.</p>
+  </div>
+
+  <div class="sub-section-header">Prerequisites</div>
+
+  <div class="two-col">
+    <div class="col">
+      <h3>Software</h3>
+      <ul class="bullet-list">
+        <li><strong>Python 3.9+</strong> — required to run the pipeline scripts</li>
+        <li><strong>Claude Code CLI</strong> — for Step 4 report generation</li>
+        <li><strong>Playwright + Chromium</strong> — for PDF export (auto-installed)</li>
+      </ul>
+      <div style="margin-top:4px">
+        <div class="code-block"><span class="comment"># First-time setup</span>
+<span class="cmd">pip</span> install <span class="value">-r requirements.txt</span>
+<span class="cmd">pip</span> install <span class="value">playwright</span>
+<span class="cmd">python</span> -m playwright install <span class="value">chromium</span></div>
+      </div>
+    </div>
+    <div class="col">
+      <h3>Source Files Needed</h3>
+      <ul class="bullet-list">
+        <li><strong>Monthly fulfillment XLSX files</strong> — one per delivery month, placed in <code>01_fulfillment_merger/input/</code></li>
+        <li><strong>COO properties file</strong> — full platform snapshot with distress columns, placed in <code>02_data_preparation/input/</code></li>
+        <li><strong>Distress overview file</strong> — all-time COO snapshot, placed in <code>03_distress_overview/input/</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sub-section-header">Mandatory Reading Before First Run</div>
+  <div class="two-col">
+    <div class="col">
+      <ul class="bullet-list">
+        <li><strong>fulfillment_distress_protocol (4).txt</strong> — defines analysis window, data encoding, report structure, and standard recommendations</li>
+      </ul>
+    </div>
+    <div class="col">
+      <ul class="bullet-list">
+        <li><strong>analysis_notes.md</strong> — documents every non-obvious data decision (signal reading rule, ABSENTEE encoding, join keys, MFR fallback)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>8020REI — Internal Use Only</span>
+    <span>Fulfillment Distress Analysis Pipeline</span>
+    <span>2</span>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     PAGE 3 — FOLDER STRUCTURE & STEPS 1–3
+     ================================================================ -->
+<section class="page">
+  <div class="page-header">
+    <img class="page-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA1wAAANcCAYAAABL5a7EAAA5tklEQVR42uzdP2wcR54v8LaXEPaAAZabGJdtK2awVHaZRtlmprN3kUfZAxxYyu4iSeFFkgIC7yJR0XsvEpVdplH0NhMdMNY4O8CBaWCCO8Hgvv5xeqyRlv/ZPd1d9fkAg+HtLnD2T2J1fbuqflUUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAW+UAIALjIabW1XX5vVp6w/0/n8cNrVP8/G7vG4+hpf8n9+2j/n0a/ffXngTxaA1p9ZSgDASqBahpi79ff4ikFmXeKf69El/7ePzght5/37zKrPjys/z+qfD6qgduRvDAACFwCfh6qyWKxORVj5Q/XZrj+bqnNhuPw8qEXoWq6QvV0NbFUgmyolAAIXQB7B6k8rP9Oc1dXA5fejlUC2DGARzH4oPq6SWSEDELgAGFC4Wq5S/bmwYtU3yyC288mDd/d4uToWAezHOpgJYgACFwA9C1djVRmkzc/+7B59FsTi80MdwjT2ABC4AIYYsn..." alt="8020REI" style="height:20px">
+    <span class="page-date">April 2026</span>
+  </div>
+
+  <span class="section-label">Data Preparation</span>
+  <div class="action-title">Place the source files, run one command — the pipeline produces the two analysis-ready files that Claude Code needs.</div>
+
+  <div class="two-col">
+    <div class="col">
+      <h3>Folder Structure</h3>
+      <div class="folder-tree"><span class="dir">historical_distress_report/</span>
+  main.py              <span class="comment-inline">← run this for steps 1–3</span>
+  requirements.txt
+  CLAUDE.md
+  analysis_notes.md
+  <span class="dir">01_fulfillment_merger/</span>
+    <span class="dir">input/</span>   <span class="comment-inline">← monthly XLSX files here</span>
+    <span class="dir">output/</span>  <span class="comment-inline">← auto-generated</span>
+    merge.py
+  <span class="dir">02_data_preparation/</span>
+    <span class="dir">input/</span>   <span class="comment-inline">← COO file here</span>
+    <span class="dir">output/</span>  <span class="comment-inline">← ✓ Data ready for analysis.xlsx</span>
+    prepare.py
+  <span class="dir">03_distress_overview/</span>
+    <span class="dir">input/</span>   <span class="comment-inline">← full COO snapshot here</span>
+    <span class="dir">output/</span>  <span class="comment-inline">← ✓ Distress Overview.xlsx</span>
+    analyze.py
+  <span class="dir">04_generate_report/</span>
+    generate.py        <span class="comment-inline">← Claude Code runs this</span></div>
+    </div>
+    <div class="col">
+      <h3>Steps 1 – 3: Run the Pipeline</h3>
+      <p class="body-text" style="font-size:0.875rem">Drop the source files in the correct input folders, then run a single command from the pipeline root:</p>
+
+      <div class="code-block"><span class="cmd">python</span> main.py <span class="arg">"Client Name"</span></div>
+
+      <p class="body-text" style="font-size:0.875rem;margin-top:4px">This executes three steps automatically:</p>
+
+      <div class="phase-block">
+        <div class="phase-num">Step 1</div>
+        <div class="phase-title">Merge Monthly Fulfillments</div>
+        <div class="phase-text">Reads all XLSX files from <code>01_fulfillment_merger/input/</code> and merges them into a single file. The <code>PERIOD</code> column (format: <code>YYYY-MM</code>) is extracted from each filename.</div>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-num">Step 2</div>
+        <div class="phase-title">Join with COO Data</div>
+        <div class="phase-text">Joins merged fulfillment rows with the COO file on <code>FOLIO + ADDRESS + ZIP</code>. Output: <code>Data ready for analysis.xlsx</code> — one sheet containing only rows with a <code>LAST SALE DATE</code>.</div>
+      </div>
+
+      <div class="phase-block">
+        <div class="phase-num">Step 3</div>
+        <div class="phase-title">Compute Distress Universe</div>
+        <div class="phase-text">Reads the full COO snapshot from <code>03_distress_overview/input/</code> and produces signal universe counts by county. Output: <code>Distress Overview.xlsx</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>8020REI — Internal Use Only</span>
+    <span>Fulfillment Distress Analysis Pipeline</span>
+    <span>3</span>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     PAGE 4 — STEP 4: CLAUDE CODE TASK
+     ================================================================ -->
+<section class="page">
+  <div class="page-header">
+    <img class="page-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA1wAAANcCAYAAABL5a7EAAA5tklEQVR42uzdP2wcR54v8LaXEPaAAZabGJdtK2awVHaZRtlmprN3kUfZAxxYyu4iSeFFkgIC7yJR0XsvEpVdplH0NhMdMNY4O8CBaWCCO8Hgvv5xeqyRlv/ZPd1d9fkAg+HtLnD2T2J1fbuqflUUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAW+UAIALjIabW1XX5vVp6w/0/n8cNrVP8/G7vG4+hpf8n9+2j/n0a/ffXngTxaA1p9ZSgDASqBahpi79ff4ikFmXeKf69El/7ePzght5/37zKrPjys/z+qfD6qgduRvDAACFwCfh6qyWKxORVj5Q/XZrj+bqnNhuPw8qEXoWq6QvV0NbFUgmyolAAIXQB7B6k8rP9Oc1dXA5fejlUC2DGARzH4oPq6SWSEDELgAGFC4Wq5S/bmwYtU3yyC288mDd/d4uToWAezHOpgJYgACFwA9C1djVRmkzc/+7B59FsTi80MdwjT2ABC4AIYYsn..." alt="8020REI" style="height:20px">
+    <span class="page-date">April 2026</span>
+  </div>
+
+  <span class="section-label">Report Generation</span>
+  <div class="action-title">Once both output files exist, a single Claude Code command analyses the data and produces the client-ready HTML and PDF.</div>
+
+  <div class="sub-section-header">The Command (Step 4)</div>
+  <p class="body-text">Open Claude Code in the pipeline root directory and run:</p>
+
+  <div class="code-block"><span class="cmd">python</span> 04_generate_report/generate.py <span class="arg">"Client Name"</span> <span class="arg">clientslug</span> <span class="flag">--window</span> <span class="value">YYYY-MM YYYY-MM</span></div>
+
+  <p class="body-text"><strong>Example — FreedomREI (July–December 2025 window):</strong></p>
+  <div class="code-block"><span class="cmd">python</span> 04_generate_report/generate.py <span class="arg">"FreedomREI"</span> <span class="arg">freedomrei</span> <span class="flag">--window</span> <span class="value">2025-07 2025-12</span></div>
+
+  <div class="two-col" style="margin-top:6px">
+    <div class="col">
+      <div class="sub-section-header">Outputs</div>
+      <ul class="bullet-list">
+        <li><strong>HTML report</strong> — <code>YYYY-MM-distress-analysis-{slug}.html</code> — saved to pipeline root</li>
+        <li><strong>PDF report</strong> — <code>YYYY-MM-distress-analysis-{slug}.pdf</code> — <strong>this is the file sent to the client</strong></li>
+      </ul>
+      <p class="body-sm" style="margin-top:4px">Logos are embedded as base64 — no HTTP server required to view or convert.</p>
+
+      <div class="sub-section-header" style="margin-top:10px">Analysis Window Rule</div>
+      <p class="body-text" style="font-size:0.875rem">Standard = <strong>6 months ending 3 months before the report date.</strong></p>
+      <table>
+        <thead><tr><th>Report Month</th><th>Use Window</th></tr></thead>
+        <tbody>
+          <tr><td>March 2026</td><td><code>--window 2025-07 2025-12</code></td></tr>
+          <tr><td>April 2026</td><td><code>--window 2025-08 2026-01</code></td></tr>
+          <tr><td>June 2026</td><td><code>--window 2025-10 2026-03</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col">
+      <div class="sub-section-header">What generate.py Does Automatically</div>
+      <ol class="step-list">
+        <li>Reads <code>Data ready for analysis.xlsx</code> — sold properties with all distress columns</li>
+        <li>Reads signals from the row where <code>PERIOD == MFR month</code>; uses closest period if MFR is outside the data window</li>
+        <li>Applies ABSENTEE encoding: values 1 and 2 both count as active</li>
+        <li>Counts active signals per property; computes percentages and stacking distribution</li>
+        <li>Reads <code>Distress Overview.xlsx</code> for the Distress Universe table (Page 4)</li>
+        <li>Embeds logos, CSS, and all chart data inline — single self-contained file</li>
+        <li>Exports PDF via Playwright/Chromium (headless)</li>
+      </ol>
+
+      <div class="insight-box warn">
+        <p><strong>If Playwright is not installed:</strong> HTML is still generated; PDF export is skipped with a warning. Fix: <code>pip install playwright &amp;&amp; python -m playwright install chromium</code></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>8020REI — Internal Use Only</span>
+    <span>Fulfillment Distress Analysis Pipeline</span>
+    <span>4</span>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     PAGE 5 — REPORT STRUCTURE & REFERENCE
+     ================================================================ -->
+<section class="page">
+  <div class="page-header">
+    <img class="page-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA1wAAANcCAYAAABL5a7EAAA5tklEQVR42uzdP2wcR54v8LaXEPaAAZabGJdtK2awVHaZRtlmprN3kUfZAxxYyu4iSeFFkgIC7yJR0XsvEpVdplH0NhMdMNY4O8CBaWCCO8Hgvv5xeqyRlv/ZPd1d9fkAg+HtLnD2T2J1fbuqflUUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAW+UAIALjIabW1XX5vVp6w/0/n8cNrVP8/G7vG4+hpf8n9+2j/n0a/ffXngTxaA1p9ZSgDASqBahpi79ff4ikFmXeKf69El/7ePzght5/37zKrPjys/z+qfD6qgduRvDAACFwCfh6qyWKxORVj5Q/XZrj+bqnNhuPw8qEXoWq6QvV0NbFUgmyolAAIXQB7B6k8rP9Oc1dXA5fejlUC2DGARzH4oPq6SWSEDELgAGFC4Wq5S/bmwYtU3yyC288mDd/d4uToWAezHOpgJYgACFwA9C1djVRmkzc/+7B59FsTi80MdwjT2ABC4AIYYsn..." alt="8020REI" style="height:20px">
+    <span class="page-date">April 2026</span>
+  </div>
+
+  <span class="section-label">Reference</span>
+  <div class="action-title">Report structure, county tiering, and standard recommendations are defined by protocol — Claude Code applies them automatically.</div>
+
+  <div class="two-col">
+    <div class="col">
+      <h3>Report Structure (4 pages + annex)</h3>
+      <table>
+        <thead><tr><th>Page</th><th>Content</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1 — Cover</strong></td><td>Atlas-style title, client name, analysis window, KPI summary</td></tr>
+          <tr><td><strong>2 — Situation & Key Finding</strong></td><td>KPI cards, active signal bar chart, signal stack distribution</td></tr>
+          <tr><td><strong>3 — Supporting Evidence</strong></td><td>County breakdown (left), Buyer Type + Monthly Sale Volume (right)</td></tr>
+          <tr><td><strong>4 — Recommendations</strong></td><td>Signal-stack tiers, Rapid Response, Niche Lists, Distress Universe table, Next Steps</td></tr>
+          <tr><td><strong>Signal Breakdown</strong></td><td>Full signal × county table (flows across pages)</td></tr>
+          <tr><td><strong>Annex</strong></td><td>All matched properties by county with active signals at delivery</td></tr>
+        </tbody>
+      </table>
+
+      <div class="sub-section-header">County Tiering</div>
+      <table>
+        <thead><tr><th>Matched Counties</th><th>Report Structure</th></tr></thead>
+        <tbody>
+          <tr><td>2–4</td><td>Standard 4-page + annex. Side-by-side county comparison on Page 3.</td></tr>
+          <tr><td>5–6</td><td>Adapted Page 3. Replace comparison with ranked summary table (top 3 signals per county).</td></tr>
+          <tr><td>7+</td><td>Portfolio report + one-page county brief per FIPS as numbered appendix sections.</td></tr>
+        </tbody>
+      </table>
+      <p class="body-sm">County count = counties with at least one matched sold property during the window. Counties with zero sales still appear in Page 3 with an amber flag box.</p>
+    </div>
+    <div class="col">
+      <h3>Standard Recommendations (always include)</h3>
+      <div class="phase-block">
+        <div class="phase-num">Recommendation 1</div>
+        <div class="phase-title">Rapid Response</div>
+        <div class="phase-text">Parallel same-day outreach channel. Frame as the answer to the speed-to-contact gap. Always include, regardless of signal mix.</div>
+      </div>
+      <div class="phase-block">
+        <div class="phase-num">Recommendation 2</div>
+        <div class="phase-title">Repeat Analysis in 6 Months</div>
+        <div class="phase-text">One dataset is an observation. Two is a pattern. Always recommend the follow-up cycle.</div>
+      </div>
+      <div class="phase-block">
+        <div class="phase-num">Recommendation 3</div>
+        <div class="phase-title">Niche Lists (conditional on VA capacity)</div>
+        <div class="phase-text">
+          <strong>Track A:</strong> High Equity + Absentee — large pool, validated signal.<br>
+          <strong>Track B:</strong> Divorce + Pre-Foreclosure — small universe, high urgency, low competition.
+        </div>
+      </div>
+
+      <div class="sub-section-header" style="margin-top:10px">Key Methodology Rules</div>
+      <ul class="bullet-list">
+        <li><strong>Inclusion:</strong> A property is included if its <code>LAST SALE DATE</code> falls within the analysis window — regardless of when it was recommended</li>
+        <li><strong>Signal reading:</strong> Read distress columns from the row where <code>PERIOD == MFR month</code></li>
+        <li><strong>ABSENTEE:</strong> Values 1 (in-state) and 2 (out-of-state) both count as active</li>
+        <li><strong>Annex dates:</strong> Show month + year only (e.g., "Oct 2025") — never exact day</li>
+        <li><strong>Zero-signal properties:</strong> Never mention their count in the report narrative</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="insight-box positive" style="margin-top:4px">
+    <p><strong>Reference report:</strong> FreedomREI (March 2026) — 181 sold properties, 3 counties (Duval, Clay, Nassau), analysis window July–December 2025. Use as structural and analytical reference for all future reports.</p>
+  </div>
+
+  <div class="page-footer">
+    <span>8020REI — Internal Use Only</span>
+    <span>Fulfillment Distress Analysis Pipeline</span>
+    <span>5</span>
+  </div>
+</section>
+
+</body>
+</html>
