@@ -1,0 +1,6 @@
+Place monthly fulfillment xlsx files here before running main.py.
+
+Expected filename format: YYYY-MM-DD <Client> <anything>.xlsx
+Example: 2025-10-08 SBDHOUSING 116K Direct Mail.xlsx
+
+These files are excluded from git (client data).

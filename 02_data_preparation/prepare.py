@@ -4,12 +4,12 @@
 Joins the merged fulfillments file with the COO (sold properties) file.
 
 Input folder expects:
-  - *_Merged_Fulfillments.xlsx  (auto-copied from step 1 output)
+  - *_Merged_Fulfillments.parquet  (auto-copied from step 1 output)
   - A COO xlsx file             (any .xlsx whose name contains 'COO' or 'sold',
                                  case-insensitive — or the only other xlsx present)
 
 Output:
-  - output/Data ready for analysis.xlsx
+  - output/Data ready for analysis.parquet
       Sheet 1: "Fulfillment properties"         -- all rows (left join)
       Sheet 2: "Sold properties on fulfillment" -- only rows with a matched sale date
 
@@ -40,9 +40,15 @@ COO_COLS = JOIN_KEYS + [
 
 COO_RENAME = {"MARKETING DM COUNT": "COO MARKETING DM COUNT"}
 
+# Uppercase set used for usecols filtering when reading the COO xlsx
+_COO_COLS_UPPER = frozenset(c.upper() for c in COO_COLS)
+
 
 def find_fulfillments_file() -> Path:
-    """Find the merged fulfillments file in input/."""
+    """Find the merged fulfillments file in input/ (parquet preferred, xlsx fallback)."""
+    candidates = sorted(INPUT_DIR.glob("*Merged_Fulfillments*.parquet"))
+    if candidates:
+        return candidates[0]
     candidates = sorted(INPUT_DIR.glob("*Merged_Fulfillments*.xlsx"))
     if not candidates:
         raise FileNotFoundError(
@@ -146,11 +152,17 @@ def run(client_name: str, fulfillments_source, fulfillments_path: Path = None) -
         shutil.copy2(src_path, dest_fulfillments)
         print(f"  [OK] {src_path.name} copied to 02_data_preparation/input/")
         print(f"\nReading merged fulfillments...")
-        fulfillments = pd.read_excel(dest_fulfillments, dtype=str)
+        if dest_fulfillments.suffix == ".parquet":
+            fulfillments = pd.read_parquet(dest_fulfillments)
+        else:
+            fulfillments = pd.read_excel(dest_fulfillments, dtype=str)
         print(f"  {len(fulfillments):,} rows, {len(fulfillments.columns)} columns")
 
-    print(f"Reading COO file...")
-    coo = pd.read_excel(coo_path, dtype=str)
+    print(f"Reading COO file (loading {len(COO_COLS)} needed columns only)...")
+    coo = pd.read_excel(
+        coo_path, dtype=str,
+        usecols=lambda col: col.strip().upper() in _COO_COLS_UPPER,
+    )
     print(f"  {len(coo):,} rows, {len(coo.columns)} columns")
 
     # -- Validate required columns ---------------------------------------------
@@ -181,18 +193,14 @@ def run(client_name: str, fulfillments_source, fulfillments_path: Path = None) -
     sold = merged[merged["LAST SALE DATE"].notna() & (merged["LAST SALE DATE"].str.strip() != "")]
 
     print(f"  {matched:,} of {len(merged):,} rows matched a COO record")
-    print(f"  {len(sold):,} rows with LAST SALE DATE -> 'Sold properties on fulfillment' sheet")
+    print(f"  {len(sold):,} rows with LAST SALE DATE -> sold properties")
 
     # -- Write output ----------------------------------------------------------
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    output_file = OUTPUT_DIR / "Data ready for analysis.xlsx"
+    output_file = OUTPUT_DIR / "Data ready for analysis.parquet"
 
     print(f"\nWriting output: {output_file.name} ...")
-    # Write only the sold properties sheet (the full merged data already
-    # exists as the Step 1 output — re-writing 90K+ rows here was the main
-    # speed bottleneck with no analytical benefit).
-    with pd.ExcelWriter(output_file, engine="openpyxl") as writer:
-        sold.to_excel(writer, sheet_name="Sold properties on fulfillment", index=False)
+    sold.to_parquet(output_file, index=False)
 
     # Persist the total fulfillment row count for the report generator.
     (OUTPUT_DIR / "fulfillment_row_count.txt").write_text(str(len(merged)))

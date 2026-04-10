@@ -57,10 +57,10 @@ def run(client_name: str) -> Path:
     merged = pd.concat(frames, ignore_index=True, sort=False)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    output_file = OUTPUT_DIR / f"{client_name}_Merged_Fulfillments.xlsx"
+    output_file = OUTPUT_DIR / f"{client_name}_Merged_Fulfillments.parquet"
 
     print(f"Writing output: {output_file.name} ...")
-    merged.to_excel(output_file, index=False, engine="openpyxl")
+    merged.to_parquet(output_file, index=False)
 
     periods = sorted(merged["PERIOD"].unique())
     print(f"\n[OK] Merge complete.")

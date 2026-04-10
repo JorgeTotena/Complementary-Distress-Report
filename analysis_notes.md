@@ -104,15 +104,11 @@ Note: `MARKETING DM COUNT` is renamed to `COO MARKETING DM COUNT` to avoid colli
 
 ## 7. Output File Structure
 
-`Data ready for analysis.xlsx` has one sheet:
-
-| Sheet name | Contents |
-|---|---|
-| `Sold properties on fulfillment` | Only rows that matched a COO record AND have a LAST SALE DATE |
+`Data ready for analysis.parquet` contains one dataset: only rows that matched a COO record AND have a LAST SALE DATE.
 
 The full merged fulfillment data (all rows) already exists as the Step 1 output in `01_fulfillment_merger/output/` — re-writing it to Step 2 output was redundant and slow. The total fulfillment row count is stored in `02_data_preparation/output/fulfillment_row_count.txt` and read by `generate.py` for the cover KPI card.
 
-The analysis is performed exclusively on `Sold properties on fulfillment`.
+The analysis is performed exclusively on the matched sold properties.
 
 ---
 
@@ -124,15 +120,18 @@ The file placed in `03_distress_overview/input/` is a **separate, independent pl
 - Used **only** to populate the "Distress Universe — Platform Overview" table in Page 4 of the report
 - **Not joined** with the fulfillment data
 - **Not used** to determine which properties are included in the analysis
-- **Not used** to read distress signals for the sold properties — those come exclusively from `Data ready for analysis.xlsx`
+- **Not used** to read distress signals for the sold properties — those come exclusively from `Data ready for analysis.parquet`
 
-The entire sold properties analysis (signal counts, percentages, county breakdown, buyer type, annex) is driven solely by `02_data_preparation/output/Data ready for analysis.xlsx`. The distress overview file has zero impact on any analytical result.
+The entire sold properties analysis (signal counts, percentages, county breakdown, buyer type, annex) is driven solely by `02_data_preparation/output/Data ready for analysis.parquet`. The distress overview file has zero impact on any analytical result.
 
 ---
 
 ## 8. Technical Notes
 
-- **Excel engine:** Use `openpyxl` for all write operations. `xlsxwriter` hits a 65,530-URL limit when the fulfillment file contains a `LINK PROPERTIES` column (common with large datasets). `openpyxl` has no such limit.
+- **Intermediate format — parquet, not xlsx:** Steps 1 and 2 now write their output as `.parquet` (pyarrow) instead of `.xlsx`. Reason: openpyxl builds the entire workbook in RAM as Python objects before flushing — on 90K+ row files this reliably kills the terminal process. Parquet writes are binary/columnar and 5–10× faster with a fraction of the memory. The final `Distress Overview.xlsx` (Step 3 output, already aggregated to a handful of rows) remains xlsx since it's tiny and opened by the team in Excel.
+- **Column filtering on large reads:** `analyze.py` and `prepare.py` both pass `usecols=lambda col: col.strip().upper() in NEEDED_COLS` when reading large COO xlsx files. This loads only the columns actually needed (COUNTY + signals, or the 9 COO join/metadata columns) rather than all 50–100 columns, cutting memory usage 70–80% on the first read.
+- **Parquet cache in analyze.py:** After the first xlsx read, `analyze.py` writes a `_cache.parquet` to `03_distress_overview/input/`. Subsequent runs load from cache and skip the Excel parse entirely. The cache is invalidated automatically when any source xlsx file is newer than the cache.
+- **Excel engine:** Use `openpyxl` for any remaining write operations. `xlsxwriter` hits a 65,530-URL limit when the fulfillment file contains a `LINK PROPERTIES` column (common with large datasets). `openpyxl` has no such limit.
 - **groupby period logic:** Do not use `groupby().apply()` with a function that returns a DataFrame row — it causes `AttributeError: 'Series' object has no attribute 'columns'` in pandas. Use an explicit `for folio, group in df.groupby('FOLIO')` loop instead.
 - **PERIOD column format:** Must be `YYYY-MM` string (e.g., `2025-07`). The merger script extracts this from the filename. Verify this format is consistent before running the join.
 

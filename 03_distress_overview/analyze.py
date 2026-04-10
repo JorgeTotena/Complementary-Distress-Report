@@ -11,12 +11,16 @@ This replaces the manual screenshot approach for the Distress Overview section
 of the HTML report.
 
 Input:
-  03_distress_overview/input/   <- place the full COO xlsx here (one file)
+  03_distress_overview/input/   <- place one or more COO xlsx files here.
+                                   Multiple files are merged automatically.
 
 Output:
   03_distress_overview/output/Distress Overview.xlsx
     Sheet "By County"     -- signal counts per county (one row per county)
     Sheet "Total"         -- signal counts across all counties combined
+
+Parquet cache: input/_cache.parquet is written after the first xlsx read.
+On subsequent runs it is loaded directly if newer than all source xlsx files.
 """
 
 import sys
@@ -73,27 +77,54 @@ ABSENTEE_COL = "ABSENTEE"
 
 COUNTY_COL = "COUNTY"
 
+# Only load the columns we actually use — county + all signal columns.
+# The usecols callable strips/uppercases so it works regardless of file header casing.
+NEEDED_COLS: frozenset[str] = frozenset(
+    {COUNTY_COL} | set(STANDARD_SIGNALS) | {ABSENTEE_COL}
+)
 
-def find_input_file(input_dir: Path) -> Path:
-    candidates = [
-        f for f in input_dir.glob("*.xlsx")
-        if not f.name.startswith("~$")
-    ]
-    if len(candidates) == 0:
+
+def load_input_data(input_dir: Path) -> pd.DataFrame:
+    """
+    Load COO data from input_dir.
+
+    - If a fresh parquet cache exists (newer than all xlsx files), load it.
+    - Otherwise read all xlsx files, merge them, and save a parquet cache.
+    Multiple xlsx files are merged automatically — no user prompt needed.
+    """
+    xlsx_files = sorted(
+        f for f in input_dir.glob("*.xlsx") if not f.name.startswith("~$")
+    )
+    if not xlsx_files:
         raise FileNotFoundError(
             f"\n[ERROR] No xlsx file found in {input_dir}\n"
             f"  Place the full COO-format file there and re-run."
         )
-    if len(candidates) > 1:
-        print(f"\n  Multiple files found in {input_dir.name}/input/:")
-        for i, f in enumerate(candidates, 1):
-            print(f"    [{i}] {f.name}")
-        choice = input("  Select file number: ").strip()
-        try:
-            return candidates[int(choice) - 1]
-        except (ValueError, IndexError):
-            raise ValueError("[ERROR] Invalid selection.")
-    return candidates[0]
+
+    parquet_path = input_dir / "_cache.parquet"
+    if parquet_path.exists():
+        parquet_mtime = parquet_path.stat().st_mtime
+        if all(parquet_mtime > fp.stat().st_mtime for fp in xlsx_files):
+            print(f"      [cache] Loading from parquet ({parquet_path.name})")
+            return pd.read_parquet(parquet_path)
+
+    _usecols = lambda col: col.strip().upper() in NEEDED_COLS  # noqa: E731
+
+    if len(xlsx_files) == 1:
+        print(f"      Reading: {xlsx_files[0].name}")
+        df = pd.read_excel(xlsx_files[0], dtype=str, usecols=_usecols)
+    else:
+        print(f"      Merging {len(xlsx_files)} xlsx files:")
+        frames = []
+        for fp in xlsx_files:
+            print(f"        {fp.name}")
+            frames.append(pd.read_excel(fp, dtype=str, usecols=_usecols))
+        df = pd.concat(frames, ignore_index=True, sort=False)
+        print(f"      Merged: {len(df):,} total rows")
+
+    print(f"      Saving parquet cache: {parquet_path.name} ...")
+    df.to_parquet(parquet_path, index=False)
+    return df
 
 
 def is_active(series: pd.Series, col: str) -> pd.Series:
@@ -111,10 +142,7 @@ def run(client_name: str) -> Path:
 
     print(f"\n  [3] Distress Overview breakdown -- {client_name}")
 
-    coo_file = find_input_file(input_dir)
-    print(f"      Reading: {coo_file.name}")
-
-    df = pd.read_excel(coo_file, dtype=str)
+    df = load_input_data(input_dir)
     df.columns = df.columns.str.strip().str.upper()
 
     # Coerce signal columns to numeric
@@ -129,7 +157,7 @@ def run(client_name: str) -> Path:
 
     if COUNTY_COL not in df.columns:
         raise ValueError(
-            f"[ERROR] Column '{COUNTY_COL}' not found in {coo_file.name}.\n"
+            f"[ERROR] Column '{COUNTY_COL}' not found in the input data.\n"
             f"  Available columns: {list(df.columns)}"
         )
 

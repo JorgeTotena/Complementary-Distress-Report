@@ -1,0 +1,7 @@
+Place the COO xlsx file here before running main.py.
+The merged fulfillments file is auto-copied here from Step 1 output.
+
+The COO file is the sold-properties export from the platform (any xlsx
+whose name contains 'COO' or 'sold', case-insensitive).
+
+These files are excluded from git (client data).

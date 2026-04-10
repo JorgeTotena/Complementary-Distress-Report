@@ -35,7 +35,7 @@ historical_distress_report/
     merge.py
   02_data_preparation/
     input/                         <- place COO xlsx here; merged file is auto-copied
-    output/                        <- Data ready for analysis.xlsx (auto-generated)
+    output/                        <- Data ready for analysis.parquet (auto-generated)
     prepare.py
   03_distress_overview/
     input/                         <- place the full COO-format file (all recommended properties)
@@ -124,6 +124,23 @@ All data methodology (signal reading rule, inclusion filter, encoding rules) is 
 3. **Niche Lists (conditional on VA capacity):**
    - Track A: High Equity + Absentee — large pool, validated signal
    - Track B: Divorce + Pre-Foreclosure — small universe, high urgency, low competition
+
+---
+
+## Known Issues & Fixes
+
+### PDF export drains disk space on C:
+**Cause:** Playwright (used for PDF export) launches a headless Chromium browser that creates temporary user-data directories in `C:\Temp` on every run. These are not cleaned up automatically, especially if the script is interrupted, and accumulate over time.
+
+**Fix (already applied):** `generate.py` now wraps the browser session in a `tempfile.TemporaryDirectory()`, which is deleted automatically when the browser closes — even on error.
+
+**If disk space was already consumed** (one-time cleanup):
+```bash
+del /S /Q "%LOCALAPPDATA%\Temp\playwright*"
+del /S /Q "%TEMP%\playwright*"
+```
+
+Note: The Playwright/Chromium install at `%LOCALAPPDATA%\ms-playwright\` (~300–600 MB) is a fixed one-time cost and does not grow with use.
 
 ---
 

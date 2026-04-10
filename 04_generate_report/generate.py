@@ -30,6 +30,7 @@ import datetime
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -42,7 +43,7 @@ import pandas as pd
 SCRIPT_DIR       = Path(__file__).resolve().parent
 PIPELINE_ROOT    = SCRIPT_DIR.parent
 CUSTOMER_SUCCESS = PIPELINE_ROOT / "8020REI-skills-main" / "8020REI-skills-main" / "customer_success"
-DATA_FILE        = PIPELINE_ROOT / "02_data_preparation" / "output" / "Data ready for analysis.xlsx"
+DATA_FILE        = PIPELINE_ROOT / "02_data_preparation" / "output" / "Data ready for analysis.parquet"
 OVERVIEW_FILE    = PIPELINE_ROOT / "03_distress_overview" / "output" / "Distress Overview.xlsx"
 ROW_COUNT_FILE   = PIPELINE_ROOT / "02_data_preparation" / "output" / "fulfillment_row_count.txt"
 REPORT_CSS_FILE  = CUSTOMER_SUCCESS / "standards" / "report.css"
@@ -142,7 +143,7 @@ def find_free_port(start: int = 8766) -> int:
 
 def run_analysis(window_start: str | None, window_end: str | None) -> dict:
     print("  Loading sold-properties data...")
-    df = pd.read_excel(DATA_FILE, sheet_name="Sold properties on fulfillment")
+    df = pd.read_parquet(DATA_FILE)
 
     df["LAST SALE DATE"] = pd.to_datetime(df["LAST SALE DATE"], errors="coerce")
     df["MARKETING FIRST RECOMMENDATION"] = pd.to_datetime(
@@ -1014,18 +1015,23 @@ def export_pdf(html_path: Path, pdf_path: Path) -> None:
         return
 
     url = html_path.as_uri()
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page    = browser.new_page()
-        page.goto(url)
-        page.wait_for_load_state("networkidle")
-        page.pdf(
-            path=str(pdf_path),
-            format="Letter",
-            print_background=True,
-            margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
-        )
-        browser.close()
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp_user_data:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                args=["--disable-dev-shm-usage", f"--user-data-dir={tmp_user_data}"]
+            )
+            page = browser.new_page()
+            page.goto(url)
+            page.wait_for_load_state("networkidle")
+            page.pdf(
+                path=str(pdf_path),
+                format="Letter",
+                print_background=True,
+                margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
+            )
+            browser.close()
+            time.sleep(1)  # let Chromium release file locks before temp dir cleanup
+    # tmp_user_data is deleted here; ignore_cleanup_errors=True handles Windows file locks
 
 
 # ---------------------------------------------------------------------------

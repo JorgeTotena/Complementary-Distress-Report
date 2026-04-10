@@ -1,0 +1,5 @@
+Place the full COO-format file here (all properties ever recommended for this client).
+Multiple xlsx files are merged automatically.
+
+A _cache.parquet file is written here after the first run to speed up
+subsequent runs. Both xlsx and cache files are excluded from git.

@@ -20,7 +20,7 @@ Expected structure:
       merge.py
     02_data_preparation/
       input/    <- place COO xlsx here; merged file is copied automatically
-      output/   <- generates "Data ready for analysis.xlsx"
+      output/   <- generates "Data ready for analysis.parquet"
       prepare.py
     03_distress_overview/
       input/    <- place the full COO-format file (all recommended properties)
@@ -103,7 +103,7 @@ def main():
     print(f"  PIPELINE COMPLETE -- {client_name}")
     print("=" * 60)
     print(f"\n  Merged fulfillments : 01_fulfillment_merger/output/")
-    print(f"  Data for analysis   : 02_data_preparation/output/Data ready for analysis.xlsx")
+    print(f"  Data for analysis   : 02_data_preparation/output/Data ready for analysis.parquet")
     print(f"  Distress Overview   : 03_distress_overview/output/Distress Overview.xlsx")
     print()
 

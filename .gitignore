@@ -1,0 +1,26 @@
+# Python bytecode
+__pycache__/
+*.pyc
+
+# ---------------------------------------------------------------
+# Pipeline input data — client source files, never commit
+# All files in these folders are either large raw xlsx exports
+# (16–109 MB each) or copies of them. Use placeholder.txt to
+# keep the folder structure tracked without the data.
+# ---------------------------------------------------------------
+01_fulfillment_merger/input/*
+01_fulfillment_merger/output/*
+02_data_preparation/input/*
+02_data_preparation/output/*
+03_distress_overview/input/*
+03_distress_overview/output/*
+
+# Keep placeholder files so the folders remain visible in the repo
+!**/placeholder.txt
+
+# Generated report files produced by generate.py
+*-distress-analysis-*.html
+*-distress-analysis-*.pdf
+
+# Stray screenshots
+Screenshot*.png
