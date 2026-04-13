@@ -10,10 +10,8 @@ __pycache__/
 # ---------------------------------------------------------------
 01_fulfillment_merger/input/*
 01_fulfillment_merger/output/*
-02_data_preparation/input/*
-02_data_preparation/output/*
-03_distress_overview/input/*
-03_distress_overview/output/*
+02_data_processing/input/*
+02_data_processing/output/*
 
 # Keep placeholder files so the folders remain visible in the repo
 !**/placeholder.txt

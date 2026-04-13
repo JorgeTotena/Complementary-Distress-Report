@@ -33,14 +33,12 @@ historical_distress_report/
     input/                         <- place monthly fulfillment xlsx files here
     output/                        <- {client}_Merged_Fulfillments.parquet (auto-generated)
     merge.py
-  03_distress_overview/
+  02_data_processing/
     input/                         <- place the full domain COO xlsx file(s) here
     output/                        <- Distress Overview.xlsx (auto-generated)
     analyze.py
-```
-
-> **Note:** Step 2 (data preparation / COO join) has been removed. Sold properties are now
-> identified by joining the fulfillment directly against the full domain COO in `generate.py`.
+  03_generate_report/
+    generate.py
 
 The 8020REI skills package (design system, CSS, templates, brand assets) lives at:
 `8020REI-skills-main/customer_success/`

@@ -70,59 +70,57 @@ For each property (using signals from the MFR period row):
 
 ## 5. Join Keys and Normalization
 
-Fulfillment file and COO file are joined on three keys: **FOLIO + ADDRESS + ZIP**
+The fulfillment parquet and the domain COO files are joined on **FOLIO only**.
 
-Normalization applied to all three columns before joining:
+Normalization applied before joining:
 - Convert to string
 - Strip leading/trailing whitespace
 - Convert to UPPERCASE
 
 ```python
-JOIN_KEYS = ["FOLIO", "ADDRESS", "ZIP"]
-for col in JOIN_KEYS:
-    df[col] = df[col].astype(str).str.strip().str.upper()
+ff["FOLIO"]     = ff["FOLIO"].astype(str).str.strip().str.upper()
+domain["FOLIO"] = domain["FOLIO"].astype(str).str.strip().str.upper()
 ```
 
+**Why FOLIO only (not FOLIO + ADDRESS + ZIP):** The three-key join used in earlier versions excluded valid matches where address formatting differed between the fulfillment export and the COO. FOLIO is the platform's canonical unique property identifier and is sufficient for a reliable join.
+
 ---
 
-## 6. COO Columns Appended to Fulfillment Data
+## 6. Data Sources per Field
 
-The following columns are taken from the COO file and appended to matched rows:
+The analysis uses two source files:
 
-| COO source column | Final column name |
+| Field | Source |
 |---|---|
-| LAST SALE DATE | LAST SALE DATE |
-| MARKETING FIRST RECOMMENDATION | MARKETING FIRST RECOMMENDATION |
-| YEAR BUILT | YEAR BUILT |
-| MARKETING DM COUNT | COO MARKETING DM COUNT |
-| MARKETING CC COUNT | MARKETING CC COUNT |
-| MARKETING SMS COUNT | MARKETING SMS COUNT |
+| All distress signal columns | Fulfillment (historical snapshot at recommendation time) |
+| COUNTY, ADDRESS, CITY, OWNER TYPE, PERIOD | Fulfillment |
+| LAST SALE DATE | Domain COO (`02_data_processing/input/`) |
+| MARKETING FIRST RECOMMENDATION | Domain COO (`02_data_processing/input/`) |
 
-Note: `MARKETING DM COUNT` is renamed to `COO MARKETING DM COUNT` to avoid collision with the same column that exists in the fulfillment file.
+Signal values come from the **fulfillment** because they represent the state of the property at the time it was recommended — not the current state. The domain COO is used only to retrieve `LAST SALE DATE` and `MARKETING FIRST RECOMMENDATION` (which are not present in the fulfillment export).
 
 ---
 
-## 7. Output File Structure
+## 7. Pipeline Output Structure
 
-`Data ready for analysis.parquet` contains one dataset: only rows that matched a COO record AND have a LAST SALE DATE.
+| Step | Output |
+|---|---|
+| Step 1 — Fulfillment Merger | `01_fulfillment_merger/output/{client}_Merged_Fulfillments.parquet` |
+| Step 2 — Data Processing | `02_data_processing/output/Distress Overview.xlsx` |
+| Step 3 — Generate Report | `{YYYY-MM}-distress-analysis-{slug}.html` + `.pdf` |
 
-The full merged fulfillment data (all rows) already exists as the Step 1 output in `01_fulfillment_merger/output/` — re-writing it to Step 2 output was redundant and slow. The total fulfillment row count is stored in `02_data_preparation/output/fulfillment_row_count.txt` and read by `generate.py` for the cover KPI card.
-
-The analysis is performed exclusively on the matched sold properties.
+`generate.py` builds a lightweight `_sales_cache.parquet` in `02_data_processing/input/` after the first run. It stores only FOLIO + LAST SALE DATE + MARKETING FIRST RECOMMENDATION from the full domain COO, so subsequent runs skip the slow xlsx parse.
 
 ---
 
-## 7b. Distress Overview File — What It Is and What It Is NOT
+## 7b. Domain COO File — Dual Role
 
-The file placed in `03_distress_overview/input/` is a **separate, independent platform snapshot**. It is:
+The full domain COO file placed in `02_data_processing/input/` serves two purposes:
 
-- A current-state picture of all properties ever recommended for the client, with their live distress flags
-- Used **only** to populate the "Distress Universe — Platform Overview" table in Page 4 of the report
-- **Not joined** with the fulfillment data
-- **Not used** to determine which properties are included in the analysis
-- **Not used** to read distress signals for the sold properties — those come exclusively from `Data ready for analysis.parquet`
+1. **Signal universe counts** (`analyze.py`, Step 2): aggregated by county → `Distress Overview.xlsx`, used for the "Distress Universe" table on Page 4.
+2. **Sales index** (`generate.py`, Step 3): FOLIO + LAST SALE DATE + MFR extracted and cached → used to identify which fulfillment properties sold and when.
 
-The entire sold properties analysis (signal counts, percentages, county breakdown, buyer type, annex) is driven solely by `02_data_preparation/output/Data ready for analysis.parquet`. The distress overview file has zero impact on any analytical result.
+**Inclusion criterion:** A property is included in the analysis if it appears in both the fulfillment AND the domain COO with `LAST SALE DATE >= window_start`. There is **no upper bound** on the sale date — this matches the Distress Report (Column D) methodology and avoids excluding properties that sold shortly after the window closed.
 
 ---
 
@@ -130,7 +128,8 @@ The entire sold properties analysis (signal counts, percentages, county breakdow
 
 - **Intermediate format — parquet, not xlsx:** Steps 1 and 2 now write their output as `.parquet` (pyarrow) instead of `.xlsx`. Reason: openpyxl builds the entire workbook in RAM as Python objects before flushing — on 90K+ row files this reliably kills the terminal process. Parquet writes are binary/columnar and 5–10× faster with a fraction of the memory. The final `Distress Overview.xlsx` (Step 3 output, already aggregated to a handful of rows) remains xlsx since it's tiny and opened by the team in Excel.
 - **Column filtering on large reads:** `analyze.py` and `prepare.py` both pass `usecols=lambda col: col.strip().upper() in NEEDED_COLS` when reading large COO xlsx files. This loads only the columns actually needed (COUNTY + signals, or the 9 COO join/metadata columns) rather than all 50–100 columns, cutting memory usage 70–80% on the first read.
-- **Parquet cache in analyze.py:** After the first xlsx read, `analyze.py` writes a `_cache.parquet` to `03_distress_overview/input/`. Subsequent runs load from cache and skip the Excel parse entirely. The cache is invalidated automatically when any source xlsx file is newer than the cache.
+- **Parquet cache in analyze.py:** After the first xlsx read, `analyze.py` writes a `_cache.parquet` to `02_data_processing/input/`. Subsequent runs load from cache and skip the Excel parse entirely. The cache is invalidated automatically when any source xlsx file is newer than the cache.
+- **Sales index cache in generate.py:** On first run, `generate.py` extracts FOLIO + LAST SALE DATE + MFR from the domain COO and saves `_sales_cache.parquet` to `02_data_processing/input/`. Invalidated automatically when xlsx files change.
 - **Excel engine:** Use `openpyxl` for any remaining write operations. `xlsxwriter` hits a 65,530-URL limit when the fulfillment file contains a `LINK PROPERTIES` column (common with large datasets). `openpyxl` has no such limit.
 - **groupby period logic:** Do not use `groupby().apply()` with a function that returns a DataFrame row — it causes `AttributeError: 'Series' object has no attribute 'columns'` in pandas. Use an explicit `for folio, group in df.groupby('FOLIO')` loop instead.
 - **PERIOD column format:** Must be `YYYY-MM` string (e.g., `2025-07`). The merger script extracts this from the filename. Verify this format is consistent before running the join.
@@ -215,7 +214,28 @@ Monthly Sale Volume must always go in the **right column**, below Buyer Type. Ne
 
 ---
 
-## 11. FreedomREI Baseline Numbers (March 2026)
+## 11. SBD Housing Baseline Numbers (April 2026)
+
+First report produced with the current pipeline (fulfillment × domain join on FOLIO, no step 2 COO join).
+
+| Metric | Value |
+|---|---|
+| Total fulfillment rows | 668,000 |
+| Unique fulfillment FOLIOs | 233,266 |
+| Sold properties in window | 4,886 |
+| Analysis window | Aug 2025–Jan 2026 (6-month) |
+| Domain COO size | 716,089 rows / 709,930 unique FOLIOs |
+| Counties | 4 (Clay, Jackson, Johnson, Wyandotte) |
+| Jackson count | 1,933 (39.6%) |
+| Johnson count | 1,497 (30.6%) |
+| Wyandotte count | 839 (17.2%) |
+| Clay count | 617 (12.6%) |
+| Top signal | High Equity |
+| Second signal | Default Risk |
+
+---
+
+## 12. FreedomREI Baseline Numbers (March 2026)
 
 For reference when sanity-checking future runs:
 

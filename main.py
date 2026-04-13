@@ -82,7 +82,7 @@ def main():
 
     # -- STEP 2: Distress Overview breakdown ----------------------------------
     try:
-        analyze_mod = load_module("analyze", root / "03_distress_overview" / "analyze.py")
+        analyze_mod = load_module("analyze", root / "02_data_processing" / "analyze.py")
         analyze_mod.run(client_name)
     except (FileNotFoundError, ValueError) as e:
         print(e)

@@ -1,15 +1,15 @@
 """
-04_generate_report/generate.py
+03_generate_report/generate.py
 -------------------------------
-Step 4: Analyse the data and produce the HTML report + PDF for any client.
+Step 3: Analyse the data and produce the HTML report + PDF for any client.
 
 Protocol reference: fulfillment_distress_protocol (4).txt
   - Signals read at Marketing First Recommendation period (value=1 only; ABSENTEE: 1 or 2)
-  - Inclusion criterion: LAST SALE DATE within analysis window
+  - Inclusion criterion: LAST SALE DATE >= analysis window start (no upper bound)
   - Fallback rule: if MFR outside data window, use closest available period
   - Standard recommendations: signal-stack prioritisation, Rapid Response, repeat in 6 months,
     Niche Lists (conditional on VA capacity)
-  - Report structure: 4 pages + annex (2-3 counties = standard layout)
+  - Report structure: 4 pages + signal breakdown section
 
 Usage:
     python generate.py "SOS Home Offers" soshomeoffers --window 2025-10 2025-12
@@ -45,8 +45,8 @@ SCRIPT_DIR        = Path(__file__).resolve().parent
 PIPELINE_ROOT     = SCRIPT_DIR.parent
 CUSTOMER_SUCCESS  = PIPELINE_ROOT / "8020REI-skills-main" / "customer_success"
 FULFILLMENT_DIR   = PIPELINE_ROOT / "01_fulfillment_merger" / "output"
-DOMAIN_INPUT_DIR  = PIPELINE_ROOT / "03_distress_overview" / "input"
-OVERVIEW_FILE     = PIPELINE_ROOT / "03_distress_overview" / "output" / "Distress Overview.xlsx"
+DOMAIN_INPUT_DIR  = PIPELINE_ROOT / "02_data_processing" / "input"
+OVERVIEW_FILE     = PIPELINE_ROOT / "02_data_processing" / "output" / "Distress Overview.xlsx"
 REPORT_CSS_FILE   = CUSTOMER_SUCCESS / "standards" / "report.css"
 LOGO_FULL         = CUSTOMER_SUCCESS / "logos" / "logo-full-light.png"
 LOGO_ICON         = CUSTOMER_SUCCESS / "logos" / "logo-icon-light.png"
