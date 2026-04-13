@@ -32,6 +32,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import webbrowser
 from pathlib import Path
 
 import numpy as np
@@ -40,15 +41,15 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 # Paths — all derived from __file__, never from cwd
 # ---------------------------------------------------------------------------
-SCRIPT_DIR       = Path(__file__).resolve().parent
-PIPELINE_ROOT    = SCRIPT_DIR.parent
-CUSTOMER_SUCCESS = PIPELINE_ROOT / "8020REI-skills-main" / "8020REI-skills-main" / "customer_success"
-DATA_FILE        = PIPELINE_ROOT / "02_data_preparation" / "output" / "Data ready for analysis.parquet"
-OVERVIEW_FILE    = PIPELINE_ROOT / "03_distress_overview" / "output" / "Distress Overview.xlsx"
-ROW_COUNT_FILE   = PIPELINE_ROOT / "02_data_preparation" / "output" / "fulfillment_row_count.txt"
-REPORT_CSS_FILE  = CUSTOMER_SUCCESS / "standards" / "report.css"
-LOGO_FULL        = CUSTOMER_SUCCESS / "logos" / "logo-full-light.png"
-LOGO_ICON        = CUSTOMER_SUCCESS / "logos" / "logo-icon-light.png"
+SCRIPT_DIR        = Path(__file__).resolve().parent
+PIPELINE_ROOT     = SCRIPT_DIR.parent
+CUSTOMER_SUCCESS  = PIPELINE_ROOT / "8020REI-skills-main" / "customer_success"
+FULFILLMENT_DIR   = PIPELINE_ROOT / "01_fulfillment_merger" / "output"
+DOMAIN_INPUT_DIR  = PIPELINE_ROOT / "03_distress_overview" / "input"
+OVERVIEW_FILE     = PIPELINE_ROOT / "03_distress_overview" / "output" / "Distress Overview.xlsx"
+REPORT_CSS_FILE   = CUSTOMER_SUCCESS / "standards" / "report.css"
+LOGO_FULL         = CUSTOMER_SUCCESS / "logos" / "logo-full-light.png"
+LOGO_ICON         = CUSTOMER_SUCCESS / "logos" / "logo-icon-light.png"
 
 # ---------------------------------------------------------------------------
 # Signal definitions — per protocol Section 2.3 and analysis_notes.md
@@ -142,25 +143,63 @@ def find_free_port(start: int = 8766) -> int:
 # ---------------------------------------------------------------------------
 
 def run_analysis(window_start: str | None, window_end: str | None) -> dict:
-    print("  Loading sold-properties data...")
-    df = pd.read_parquet(DATA_FILE)
+    # --- Step A: Load fulfillment (step 1 output) ---
+    ff_files = sorted(FULFILLMENT_DIR.glob("*.parquet"))
+    if not ff_files:
+        raise FileNotFoundError(
+            "No fulfillment parquet found in 01_fulfillment_merger/output/. Run main.py first."
+        )
+    print("  Loading fulfillment data...")
+    ff = pd.read_parquet(ff_files[0])
+    ff["FOLIO"]  = ff["FOLIO"].astype(str).str.strip().str.upper()
+    ff["PERIOD"] = ff["PERIOD"].astype(str).str.strip()
+    total_rows   = len(ff)
 
+    # --- Step B: Load domain sales index (FOLIO + LAST SALE DATE + MFR) ---
+    # Cache stored alongside the step-3 distress input so it is rebuilt when those files change.
+    sales_cache  = DOMAIN_INPUT_DIR / "_sales_cache.parquet"
+    domain_xlsx  = sorted(f for f in DOMAIN_INPUT_DIR.glob("*.xlsx") if not f.name.startswith("~$"))
+    SALES_COLS   = frozenset({"FOLIO", "LAST SALE DATE", "MARKETING FIRST RECOMMENDATION"})
+
+    if sales_cache.exists() and all(sales_cache.stat().st_mtime > f.stat().st_mtime for f in domain_xlsx):
+        print("  Loading domain sales index from cache...")
+        domain_sales = pd.read_parquet(sales_cache)
+    else:
+        print(f"  Building domain sales index from {len(domain_xlsx)} file(s)...")
+        frames = []
+        for fp in domain_xlsx:
+            print(f"    {fp.name}")
+            frames.append(
+                pd.read_excel(fp, dtype=str, usecols=lambda c: c.strip().upper() in SALES_COLS)
+            )
+        domain_sales = pd.concat(frames, ignore_index=True)
+        domain_sales.columns = domain_sales.columns.str.strip().str.upper()
+        domain_sales["FOLIO"] = domain_sales["FOLIO"].astype(str).str.strip().str.upper()
+        domain_sales = domain_sales.drop_duplicates(subset=["FOLIO"], keep="first")
+        domain_sales.to_parquet(sales_cache, index=False)
+        print(f"    Saved sales cache ({len(domain_sales):,} unique FOLIOs)")
+
+    # --- Step C: Join fulfillment with domain on FOLIO ---
+    df = ff.merge(domain_sales, on="FOLIO", how="left")
+
+    # --- Step D: Parse dates, filter to sold properties ---
     df["LAST SALE DATE"] = pd.to_datetime(df["LAST SALE DATE"], errors="coerce")
     df["MARKETING FIRST RECOMMENDATION"] = pd.to_datetime(
         df["MARKETING FIRST RECOMMENDATION"], errors="coerce"
     )
-    df["MFR_MONTH"] = df["MARKETING FIRST RECOMMENDATION"].dt.to_period("M").astype(str)
-    df["PERIOD"] = df["PERIOD"].astype(str).str.strip()
+    df = df[df["LAST SALE DATE"].notna()]
 
-    # Inclusion criterion: LAST SALE DATE within analysis window (analysis_notes.md Section 1)
-    if window_start and window_end:
+    # --- Step E: Filter by analysis window (LAST SALE DATE >= window start, no upper bound) ---
+    # Matches Distress Report logic: count all sales that occurred after the fulfillment window opened.
+    if window_start:
         ws = pd.Timestamp(window_start)
-        we = pd.Timestamp(window_end) + pd.offsets.MonthEnd(0)
-        df = df[(df["LAST SALE DATE"] >= ws) & (df["LAST SALE DATE"] <= we)]
+        df = df[df["LAST SALE DATE"] >= ws]
+
+    df["MFR_MONTH"] = df["MARKETING FIRST RECOMMENDATION"].dt.to_period("M").astype(str)
 
     available_signals = [c for c in SIGNAL_COLS if c in df.columns]
 
-    # Pick one row per FOLIO at the MFR period (signal reading rule)
+    # --- Step F: Signal reading rule — one fulfillment row per FOLIO at MFR period ---
     rows, fallback_flags = [], []
     for _, group in df.groupby("FOLIO"):
         row, is_fb = pick_signal_row(group)
@@ -188,17 +227,10 @@ def run_analysis(window_start: str | None, window_end: str | None) -> dict:
 
     adf["ACTIVE_SIGNALS_STR"] = adf.apply(active_signals_str, axis=1)
 
-    # Total fulfillment row count
-    if ROW_COUNT_FILE.exists():
-        total_rows = int(ROW_COUNT_FILE.read_text().strip())
-    else:
-        total_rows = 0
-
     dov_total  = pd.read_excel(OVERVIEW_FILE, sheet_name="Total").iloc[0]
     dov_county = pd.read_excel(OVERVIEW_FILE, sheet_name="By County")
 
-    # All counties in the client's BuyBox (from Distress Overview) — drives report tiering
-    all_buybox_counties = sorted(dov_county["COUNTY"].dropna().astype(str).tolist())
+    all_buybox_counties = sorted(adf["COUNTY"].dropna().astype(str).unique().tolist())
 
     return {
         "adf": adf,
@@ -607,45 +639,105 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
         </tbody>
       </table>"""
 
-    def annex_rows_html() -> str:
-        adf_sorted    = adf.sort_values(["COUNTY", "ADDRESS"]).reset_index(drop=True)
-        rows          = []
-        current_county = None
-        for _, row in adf_sorted.iterrows():
-            county = row["COUNTY"]
-            if county != current_county:
-                rows.append(
-                    f"<tr style='background:#E8F0FE'>"
-                    f"<td colspan='7' style='font-family:Georgia,serif;font-weight:700;"
-                    f"font-size:11px;padding:8px 4px 4px'>{county} County</td></tr>"
-                )
-                current_county = county
-            folio     = str(row.get("FOLIO", ""))
-            address   = str(row.get("ADDRESS", ""))
-            city      = str(row.get("CITY", ""))
-            addr_full = f"{address}, {city}" if city and city not in ("", "nan") else address
-            owner_tp  = str(row.get("OWNER TYPE", ""))
-            mfr       = row["MARKETING FIRST RECOMMENDATION"]
-            mfr_str   = mfr.strftime("%b %Y") if pd.notna(mfr) else ""
-            fb_note   = (
-                ' <span style="color:#B45309;font-size:8px">(approx.)</span>'
-                if row["IS_FALLBACK"] else ""
+    def annex_summary_html() -> str:
+        active_counties = sorted(c for c in county_data if county_data[c]["n"] > 0)
+
+        # --- Signal × County table ---
+        county_ths = "".join(
+            f"<th class='num'>{c}</th>" for c in active_counties
+        )
+        sig_rows = []
+        for lbl, cnt, pct in sig_summary:
+            cells = ""
+            for county in active_counties:
+                d  = county_data[county]
+                cc = d["all"].get(lbl, 0)
+                cp = round(cc / d["n"] * 100) if d["n"] else 0
+                cells += f"<td class='num'>{cc}<br><span style='color:#888;font-size:9px'>{cp}%</span></td>"
+            sig_rows.append(
+                f"<tr><td>{lbl}</td>"
+                f"<td class='num'><strong>{cnt}</strong><br><span style='color:#888;font-size:9px'>{pct}%</span></td>"
+                f"{cells}</tr>"
             )
-            sale_date = row["LAST SALE DATE"]
-            sale_str  = sale_date.strftime("%b %d, %Y") if pd.notna(sale_date) else ""
-            signals   = row["ACTIVE_SIGNALS_STR"]
-            rows.append(
-                f"<tr>"
-                f"<td>{county}</td>"
-                f"<td>{addr_full}</td>"
-                f"<td style='font-size:9px'>{folio}</td>"
-                f"<td>{owner_tp}</td>"
-                f"<td>{mfr_str}{fb_note}</td>"
-                f"<td>{sale_str}</td>"
-                f"<td>{signals}</td>"
-                f"</tr>"
+        sig_table = f"""<table style="font-size:10px;width:100%">
+          <thead><tr>
+            <th>Signal</th>
+            <th class="num">Total ({n})</th>
+            {county_ths}
+          </tr></thead>
+          <tbody>{"".join(sig_rows)}</tbody>
+        </table>"""
+
+        # --- Owner Type × County table ---
+        owner_types = sorted(adf["OWNER TYPE"].dropna().astype(str).unique())
+        ot_county_ths = "".join(f"<th class='num'>{c}</th>" for c in active_counties)
+        ot_rows = []
+        for ot in owner_types:
+            if not ot or ot == "nan":
+                continue
+            total_ot = int((adf["OWNER TYPE"].astype(str) == ot).sum())
+            cells = ""
+            for county in active_counties:
+                grp = adf[adf["COUNTY"] == county]
+                cc  = int((grp["OWNER TYPE"].astype(str) == ot).sum())
+                cp  = round(cc / county_data[county]["n"] * 100) if county_data[county]["n"] else 0
+                cells += f"<td class='num'>{cc}&nbsp;<span style='color:#888;font-size:9px'>({cp}%)</span></td>"
+            ot_rows.append(
+                f"<tr><td>{ot}</td>"
+                f"<td class='num'><strong>{total_ot}</strong></td>"
+                f"{cells}</tr>"
             )
-        return "\n      ".join(rows)
+        ot_table = f"""<table style="font-size:10px;width:100%">
+          <thead><tr>
+            <th>Owner Type</th>
+            <th class="num">Total</th>
+            {ot_county_ths}
+          </tr></thead>
+          <tbody>{"".join(ot_rows)}</tbody>
+        </table>"""
+
+        # --- Signal Stack × County table ---
+        def stack_row(label, mask):
+            total_n = int(mask.sum())
+            cells   = ""
+            for county in active_counties:
+                grp  = adf[adf["COUNTY"] == county]
+                cc   = int(mask[grp.index].sum())
+                cp   = round(cc / county_data[county]["n"] * 100) if county_data[county]["n"] else 0
+                cells += f"<td class='num'>{cc}&nbsp;<span style='color:#888;font-size:9px'>({cp}%)</span></td>"
+            return (
+                f"<tr><td>{label}</td>"
+                f"<td class='num'><strong>{total_n}</strong></td>"
+                f"{cells}</tr>"
+            )
+        stack_rows = (
+            stack_row("0 signals",  adf["SIGNAL_COUNT"] == 0) +
+            stack_row("1 signal",   adf["SIGNAL_COUNT"] == 1) +
+            stack_row("2 signals",  adf["SIGNAL_COUNT"] == 2) +
+            stack_row("3+ signals", adf["SIGNAL_COUNT"] >= 3)
+        )
+        stack_table = f"""<table style="font-size:10px;width:100%">
+          <thead><tr>
+            <th>Signal Stack</th>
+            <th class="num">Total</th>
+            {ot_county_ths}
+          </tr></thead>
+          <tbody>{stack_rows}</tbody>
+        </table>"""
+
+        return f"""
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px">
+          <div>
+            <h4 style="margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#555">Owner Type Breakdown</h4>
+            {ot_table}
+          </div>
+          <div>
+            <h4 style="margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#555">Signal Stack Distribution</h4>
+            {stack_table}
+          </div>
+        </div>
+        <h4 style="margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#555">Active Signals at Delivery — by County</h4>
+        {sig_table}"""
 
     # ====================================================================
     # Counties with no matched transactions — flag for report callout
@@ -962,41 +1054,6 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
 </section>
 
 
-<!-- ============================================================
-     ANNEX — flows across as many pages as needed
-     ============================================================ -->
-<section class="annex-page">
-  <div class="page-header">
-    <img src="{logo_icon_src}" alt="8020REI">
-    <span>{client_name} &middot; Fulfillment Distress Analysis &middot; {report_date} &middot; Annex</span>
-  </div>
-  <span class="section-label">Annex</span>
-  <p class="action-title" style="font-size:1rem">
-    All {n} matched properties sorted by county &mdash; signals read at Marketing First
-    Recommendation period. <span style="color:#B45309">Amber</span> = closest available period used (MFR outside data window).
-  </p>
-  <table>
-    <thead>
-      <tr>
-        <th>County</th>
-        <th>Address</th>
-        <th>Folio</th>
-        <th>Owner Type</th>
-        <th>First Rec.</th>
-        <th>Sale Date</th>
-        <th>Active Signals at Delivery</th>
-      </tr>
-    </thead>
-    <tbody>
-      {annex_rows_html()}
-    </tbody>
-  </table>
-  <div class="flow-footer">
-    <span><a href="https://8020rei.com">8020rei.com</a></span>
-    <span class="footer-client">{client_name}</span>
-    <span>Annex</span>
-  </div>
-</section>
 
 </body>
 </html>"""
@@ -1017,10 +1074,11 @@ def export_pdf(html_path: Path, pdf_path: Path) -> None:
     url = html_path.as_uri()
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp_user_data:
         with sync_playwright() as p:
-            browser = p.chromium.launch(
-                args=["--disable-dev-shm-usage", f"--user-data-dir={tmp_user_data}"]
+            context = p.chromium.launch_persistent_context(
+                user_data_dir=tmp_user_data,
+                args=["--disable-dev-shm-usage"],
             )
-            page = browser.new_page()
+            page = context.new_page()
             page.goto(url)
             page.wait_for_load_state("networkidle")
             page.pdf(
@@ -1029,7 +1087,7 @@ def export_pdf(html_path: Path, pdf_path: Path) -> None:
                 print_background=True,
                 margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
             )
-            browser.close()
+            context.close()
             time.sleep(1)  # let Chromium release file locks before temp dir cleanup
     # tmp_user_data is deleted here; ignore_cleanup_errors=True handles Windows file locks
 
@@ -1079,7 +1137,6 @@ def main() -> None:
     print("=" * 60)
 
     for label, path in [
-        ("Analysis data",     DATA_FILE),
         ("Distress overview", OVERVIEW_FILE),
         ("report.css",        REPORT_CSS_FILE),
         ("Logo (full)",       LOGO_FULL),
@@ -1088,8 +1145,8 @@ def main() -> None:
         if not path.exists():
             print(f"  [WARN] {label} not found: {path}")
 
-    if not DATA_FILE.exists():
-        print(f"\n[ERROR] Analysis data not found. Run main.py first.")
+    if not any(FULFILLMENT_DIR.glob("*.parquet")):
+        print(f"\n[ERROR] Fulfillment parquet not found in {FULFILLMENT_DIR}. Run main.py first.")
         sys.exit(1)
     if not OVERVIEW_FILE.exists():
         print(f"\n[ERROR] Distress overview not found. Run main.py first.")
@@ -1113,7 +1170,6 @@ def main() -> None:
         yr, mo = window_end.split("-")[:2]
         stem   = f"{yr}-{mo}-distress-analysis-{args.client_slug}"
     else:
-        import datetime
         stem = datetime.date.today().strftime("%Y-%m") + f"-distress-analysis-{args.client_slug}"
 
     html_path = PIPELINE_ROOT / f"{stem}.html"
@@ -1135,6 +1191,8 @@ def main() -> None:
     print(f"  DONE \u2014 {args.client_name}")
     print("=" * 60)
     print()
+
+    webbrowser.open(html_path.as_uri())
 
 
 if __name__ == "__main__":

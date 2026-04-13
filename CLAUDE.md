@@ -24,54 +24,49 @@ Read the full protocol before doing anything:
 
 ```
 historical_distress_report/
-  main.py                          <- run this to execute steps 1, 2, and 3
+  main.py                          <- run this to execute steps 1 and 2
   requirements.txt                 <- pip install -r requirements.txt before first run
   CLAUDE.md                        <- you are here
   analysis_notes.md                <- data methodology decisions (read before analysis)
   fulfillment_distress_protocol (4).txt  <- full protocol (mandatory reading)
   01_fulfillment_merger/
     input/                         <- place monthly fulfillment xlsx files here
-    output/                        <- {client}_Merged_Fulfillments.xlsx (auto-generated)
+    output/                        <- {client}_Merged_Fulfillments.parquet (auto-generated)
     merge.py
-  02_data_preparation/
-    input/                         <- place COO xlsx here; merged file is auto-copied
-    output/                        <- Data ready for analysis.parquet (auto-generated)
-    prepare.py
   03_distress_overview/
-    input/                         <- place the full COO-format file (all recommended properties)
+    input/                         <- place the full domain COO xlsx file(s) here
     output/                        <- Distress Overview.xlsx (auto-generated)
     analyze.py
 ```
 
+> **Note:** Step 2 (data preparation / COO join) has been removed. Sold properties are now
+> identified by joining the fulfillment directly against the full domain COO in `generate.py`.
+
 The 8020REI skills package (design system, CSS, templates, brand assets) lives at:
-`../8020REI-skills-main/8020REI-skills-main/customer_success/`
+`8020REI-skills-main/customer_success/`
 
 Previous client reports live at:
-`../8020REI-skills-main/8020REI-skills-main/customer_success/clients/`
+`8020REI-skills-main/customer_success/clients/`
 
 ---
 
 ## Step-by-Step Workflow
 
-### Steps 1, 2 & 3 — Run the pipeline (human task)
+### Steps 1 & 2 — Run the pipeline (human task)
 
 ```bash
 python main.py "Client Name"
 ```
 
-This runs all three steps automatically:
-1. Merge all monthly fulfillment xlsx files from `01_fulfillment_merger/input/`
-2. Pass merged data in-memory to join with the COO file in `02_data_preparation/input/`; output `Data ready for analysis.xlsx` in `02_data_preparation/output/`
-3. Read the full COO-format file from `03_distress_overview/input/` and compute the distress signal universe counts by county; output `Distress Overview.xlsx` in `03_distress_overview/output/`
+This runs both steps automatically:
+1. Merge all monthly fulfillment xlsx files from `01_fulfillment_merger/input/` → `{client}_Merged_Fulfillments.parquet`
+2. Read the full domain COO file(s) from `03_distress_overview/input/` and compute distress signal universe counts by county → `Distress Overview.xlsx`
 
-`Data ready for analysis.xlsx` contains one sheet:
-- `Sold properties on fulfillment` — only rows that matched a COO record AND have a LAST SALE DATE
+**Analysis window rule:** The window always matches the fulfillment period — count the files in `01_fulfillment_merger/input/` and use their date range (e.g. 6 files Aug 2025–Jan 2026 → `--window 2025-08 2026-01`).
 
-The total fulfillment row count is stored separately in `02_data_preparation/output/fulfillment_row_count.txt`.
+### Step 3 — Generate the report (Claude task)
 
-### Step 4 — Generate the report (Claude task)
-
-Once `Data ready for analysis.xlsx` and `Distress Overview.xlsx` both exist, run:
+Once `{client}_Merged_Fulfillments.parquet` and `Distress Overview.xlsx` both exist, run:
 
 ```bash
 python 04_generate_report/generate.py "Client Name" clientslug --window YYYY-MM YYYY-MM
@@ -93,13 +88,12 @@ Logos are embedded as base64 — no HTTP server needed.
 
 All data methodology (signal reading rule, inclusion filter, encoding rules) is handled automatically by `generate.py`. See `analysis_notes.md` for the full methodology reference.
 
-**Report structure (4 pages + signal breakdown section + annex):**
+**Report structure (4 pages + signal breakdown section):**
 - Page 1: Cover — Atlas-style title (see `analysis_notes.md` Section 9)
 - Page 2: Situation & Key Finding — KPI cards, bar chart of active signals, signal stack distribution
 - Page 3: Supporting Evidence — county breakdown (left col), buyer type + monthly sale volume (right col)
 - Page 4: Recommendations — signal-stack tiers, Rapid Response, Niche Lists, Distress Universe table, Next Steps
 - Signal breakdown section: full signal × county table (flows across pages as needed)
-- Annex: All matched properties sorted by county, with active signals at delivery
 
 **Page 3 layout rule:** Monthly Sale Volume always goes in the **right column**, below the Buyer Type table and paragraph. Never stack it below County Breakdown in the left column — the left column is already near capacity with the county table.
 
@@ -144,9 +138,8 @@ Note: The Playwright/Chromium install at `%LOCALAPPDATA%\ms-playwright\` (~300�
 
 ---
 
-## Reference: FreedomREI (March 2026)
+## Reference: SBD Housing (April 2026)
 
-The first report produced with this pipeline. Use as a structural and analytical reference.
-- Report: `../8020REI-skills-main/8020REI-skills-main/customer_success/clients/freedomrei/2026-03-distress-analysis.html`
-- Context: `../8020REI-skills-main/8020REI-skills-main/customer_success/clients/freedomrei/context.md`
-- Analysis window: July–December 2025 | 181 sold properties | 3 counties (Duval, Clay, Nassau)
+The first report produced with the current pipeline (fulfillment + domain, no step 2 COO join).
+- Report: `2026-01-distress-analysis-sbdhousing.html`
+- Analysis window: August 2025–January 2026 | 4,886 sold properties | 4 counties (Clay, Jackson, Johnson, Wyandotte)

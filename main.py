@@ -68,28 +68,19 @@ def main():
     print(f"\nClient   : {client_name}")
     print("Steps    :")
     print("  [1] Merge monthly fulfillment files")
-    print("  [2] Join with COO -- Data ready for analysis")
-    print("  [3] Distress Overview breakdown")
+    print("  [2] Distress Overview breakdown")
 
     root = Path(__file__).parent
 
     # -- STEP 1: Merge fulfillments -------------------------------------------
     try:
         merge_mod = load_module("merge", root / "01_fulfillment_merger" / "merge.py")
-        merged_df, merged_output = merge_mod.run(client_name)
+        merge_mod.run(client_name)
     except FileNotFoundError as e:
         print(e)
         sys.exit(1)
 
-    # -- STEP 2: Data preparation ---------------------------------------------
-    try:
-        prepare_mod = load_module("prepare", root / "02_data_preparation" / "prepare.py")
-        prepare_mod.run(client_name, merged_df)
-    except (FileNotFoundError, ValueError) as e:
-        print(e)
-        sys.exit(1)
-
-    # -- STEP 3: Distress Overview breakdown ----------------------------------
+    # -- STEP 2: Distress Overview breakdown ----------------------------------
     try:
         analyze_mod = load_module("analyze", root / "03_distress_overview" / "analyze.py")
         analyze_mod.run(client_name)
@@ -103,7 +94,6 @@ def main():
     print(f"  PIPELINE COMPLETE -- {client_name}")
     print("=" * 60)
     print(f"\n  Merged fulfillments : 01_fulfillment_merger/output/")
-    print(f"  Data for analysis   : 02_data_preparation/output/Data ready for analysis.parquet")
     print(f"  Distress Overview   : 03_distress_overview/output/Distress Overview.xlsx")
     print()
 
