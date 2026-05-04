@@ -353,7 +353,13 @@ def build_html(
     dominant_counties  = sorted(county_data.keys(), key=lambda c: county_data[c]["n"], reverse=True)
     # matched_counties: only those with at least 1 matched sale (for narrative titles)
     matched_counties   = [c for c in dominant_counties if county_data[c]["n"] > 0]
-    counties_str       = " \u00b7 ".join(sorted(county_data.keys()))
+    # Compact county list for the cover meta + Page 2 "Counties" KPI card.
+    # Listing every county on many-county reports (e.g. 31 for Rapid Fire HB)
+    # wraps over many lines and pushes Page 2 content past the page boundary.
+    # Show top 5 by sold count + "+N more" \u2014 same rule as the breakdown tables.
+    counties_str = " \u00b7 ".join(top_counties)
+    if other_counties:
+        counties_str += f" \u00b7 +{len(other_counties)} more"
     client_poss        = possessive(client_name)
 
     top_labels = [s[0] for s in sig_summary]
