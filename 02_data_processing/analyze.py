@@ -77,10 +77,16 @@ ABSENTEE_COL = "ABSENTEE"
 
 COUNTY_COL = "COUNTY"
 
-# Only load the columns we actually use — county + all signal columns.
+FOLIO_COL = "FOLIO"
+BUYBOX_COL = "BUYBOX SCORE"
+LAST_SALE_COL = "LAST SALE DATE"
+
+# Only load the columns we actually use — county + all signal columns + FOLIO/BUYBOX/SALE
+# (needed to match the other Distress Report's logic: dedup by FOLIO keeping the row with
+# the most recent LAST SALE DATE, then filter to BUYBOX SCORE > 0 — the addressable universe).
 # The usecols callable strips/uppercases so it works regardless of file header casing.
 NEEDED_COLS: frozenset[str] = frozenset(
-    {COUNTY_COL} | set(STANDARD_SIGNALS) | {ABSENTEE_COL}
+    {COUNTY_COL, FOLIO_COL, BUYBOX_COL, LAST_SALE_COL} | set(STANDARD_SIGNALS) | {ABSENTEE_COL}
 )
 
 
@@ -144,6 +150,26 @@ def run(client_name: str) -> Path:
 
     df = load_input_data(input_dir)
     df.columns = df.columns.str.strip().str.upper()
+
+    # Match the other Distress Report's logic: dedup by FOLIO keeping the row with
+    # the most recent LAST SALE DATE, then restrict to the BuyBox universe
+    # (BUYBOX SCORE > 0). Without this, raw COO row counts inflate every signal
+    # total because the file carries ~167K duplicate FOLIOs and ~1.3M properties
+    # outside the buybox.
+    if FOLIO_COL in df.columns:
+        if LAST_SALE_COL in df.columns:
+            df[LAST_SALE_COL] = pd.to_datetime(df[LAST_SALE_COL], errors="coerce")
+            df = df.sort_values(LAST_SALE_COL, na_position="first")
+        df[FOLIO_COL] = df[FOLIO_COL].astype(str).str.strip().str.upper()
+        pre = len(df)
+        df = df.drop_duplicates(subset=[FOLIO_COL], keep="last").reset_index(drop=True)
+        print(f"      Dedup by FOLIO: {pre:,} -> {len(df):,} rows")
+
+    if BUYBOX_COL in df.columns:
+        df[BUYBOX_COL] = pd.to_numeric(df[BUYBOX_COL], errors="coerce").fillna(0)
+        pre = len(df)
+        df = df[df[BUYBOX_COL] > 0].reset_index(drop=True)
+        print(f"      BuyBox filter (BUYBOX SCORE > 0): {pre:,} -> {len(df):,} rows")
 
     # Coerce signal columns to numeric
     all_signal_cols = STANDARD_SIGNALS + [ABSENTEE_COL]

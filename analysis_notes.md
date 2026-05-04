@@ -122,6 +122,24 @@ The full domain COO file placed in `02_data_processing/input/` serves two purpos
 
 **Inclusion criterion:** A property is included in the analysis if it appears in both the fulfillment AND the domain COO with `LAST SALE DATE >= window_start`. There is **no upper bound** on the sale date — this matches the Distress Report (Column D) methodology and avoids excluding properties that sold shortly after the window closed.
 
+### Domain dedup rule (must match the other Distress Report)
+
+The COO file carries ~167K duplicate FOLIO rows (multiple snapshots of the same property). Both `generate.py` (sales index) and `analyze.py` (universe counts) **must** dedup with:
+
+```python
+dom = (dom.sort_values("LAST SALE DATE", na_position="first")
+          .drop_duplicates("FOLIO", keep="last")
+          .reset_index(drop=True))
+```
+
+Sort by `LAST SALE DATE` first so NaT rows sit at the front; `keep="last"` then keeps the row with the most recent sale per FOLIO. A naive `keep="first"` (no sort) silently picks an older or NaT sale date and drops recently-sold properties from the analysis — for Rapid Fire HB (Nov 2025–Jan 2026 window) this caused 4,990 sold properties to be reported instead of the correct 5,147 (–157, ~3% under-count).
+
+This matches `build_domain_report.py:388-392` in the other Distress Report folder, which is the canonical reference for the calculation.
+
+### BuyBox filter for the Distress Universe (`analyze.py`)
+
+`analyze.py` filters domain rows to `BUYBOX SCORE > 0` before counting signals. This restricts the "Distress Universe" totals (Page 4, "Platform Total" column) to the addressable buybox — the same scope the other Distress Report's Column B uses. Without the filter, totals include properties outside the client's buybox and inflate the universe by 2–3×.
+
 ---
 
 ## 8. Technical Notes

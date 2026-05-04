@@ -175,7 +175,16 @@ def run_analysis(window_start: str | None, window_end: str | None) -> dict:
         domain_sales = pd.concat(frames, ignore_index=True)
         domain_sales.columns = domain_sales.columns.str.strip().str.upper()
         domain_sales["FOLIO"] = domain_sales["FOLIO"].astype(str).str.strip().str.upper()
-        domain_sales = domain_sales.drop_duplicates(subset=["FOLIO"], keep="first")
+        # Dedup: keep the row with the most recent LAST SALE DATE per FOLIO. The COO file
+        # has ~167K duplicate FOLIO rows; naive keep="first" silently picks an older or
+        # NaT sale date and drops recently-sold properties from the analysis. NaT rows
+        # sort to the front so they get dropped whenever a real date exists.
+        domain_sales["LAST SALE DATE"] = pd.to_datetime(domain_sales["LAST SALE DATE"], errors="coerce")
+        domain_sales = (
+            domain_sales.sort_values("LAST SALE DATE", na_position="first")
+                        .drop_duplicates(subset=["FOLIO"], keep="last")
+                        .reset_index(drop=True)
+        )
         domain_sales.to_parquet(sales_cache, index=False)
         print(f"    Saved sales cache ({len(domain_sales):,} unique FOLIOs)")
 
