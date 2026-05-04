@@ -300,6 +300,38 @@ def build_html(
     #   5–6 matched counties → adapted Page 3 (ranked summary table, no side-by-side bars)
     #   7+  matched counties → portfolio report + per-county briefs
 
+    # ---- Display counties: top 5 by sold count + aggregated "Other" ----
+    # On many-county reports (e.g. Rapid Fire HB has 31 matched counties), showing
+    # every county in the breakdown and signal × county tables makes Page 3 unreadable
+    # and forces the wide signal table to wrap awkwardly. Cap at top-5 by matched
+    # sold count and roll the remainder into a synthetic "Other" entry — the
+    # narrative still highlights the dominant markets, while "Other" preserves the
+    # totals so the table columns sum back to N.
+    TOP_N_DISPLAY = 5
+    ranked_counties = sorted(
+        [c for c in county_data if county_data[c]["n"] > 0],
+        key=lambda c: county_data[c]["n"],
+        reverse=True,
+    )
+    top_counties        = ranked_counties[:TOP_N_DISPLAY]
+    other_counties      = ranked_counties[TOP_N_DISPLAY:]
+    display_county_keys = list(top_counties)
+    county_display      = {c: county_data[c] for c in top_counties}
+    display_to_counties = {c: [c] for c in top_counties}
+    if other_counties:
+        other_n   = sum(county_data[c]["n"] for c in other_counties)
+        other_pct = round(other_n / n * 100, 1) if n else 0.0
+        other_all: dict[str, int] = {}
+        for c in other_counties:
+            for sig, v in county_data[c]["all"].items():
+                other_all[sig] = other_all.get(sig, 0) + v
+        other_top3 = sorted(other_all.items(), key=lambda x: x[1], reverse=True)[:3]
+        county_display["Other"] = {
+            "n": other_n, "pct": other_pct, "all": other_all, "top3": other_top3,
+        }
+        display_to_counties["Other"] = list(other_counties)
+        display_county_keys.append("Other")
+
     # ---- Monthly volume ----
     adf["SALE_MONTH"] = adf["LAST SALE DATE"].dt.to_period("M")
     monthly = adf["SALE_MONTH"].value_counts().sort_index()
@@ -374,10 +406,10 @@ def build_html(
     else:
         p3_title = f"Signal patterns across {client_poss} active markets"
 
-    # ---- County interpretation (concise, one sentence per county) ----
+    # ---- County interpretation (concise, one sentence per displayed county) ----
     county_interp_parts = []
-    for county in sorted(county_data.keys()):
-        d = county_data[county]
+    for county in display_county_keys:
+        d = county_display[county]
         top_two = oxford_join([s for s, _ in d["top3"][:2]]) if d["top3"] else "no dominant signal"
         county_interp_parts.append(
             f"{county}\u2019s profile is led by {top_two}, pointing to distinct"
@@ -544,16 +576,20 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
 
     def county_rows_html() -> str:
         rows = []
-        for county in sorted(county_data.keys()):
-            d = county_data[county]
+        for county in display_county_keys:
+            d = county_display[county]
             if d["n"] > 0:
                 top3_str = " &middot; ".join(
                     f"{s}&nbsp;{round(c / d['n'] * 100)}%" for s, c in d["top3"]
                 )
             else:
                 top3_str = "<span style='color:#aaa'>No matched transactions this period</span>"
+            label = (
+                f"Other ({len(other_counties)} counties)"
+                if county == "Other" else county
+            )
             rows.append(
-                f"<tr><td><strong>{county}</strong></td>"
+                f"<tr><td><strong>{label}</strong></td>"
                 f"<td class='num'>{d['n']}</td>"
                 f"<td class='num'>{d['pct']}%</td>"
                 f"<td style='font-size:10px'>{top3_str}</td></tr>"
@@ -615,9 +651,8 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
         return "\n          ".join(rows)
 
     def signal_breakdown_table_html() -> str:
-        """Atlas-style signal breakdown table — only counties with matched sold properties as columns."""
-        # Exclude counties with 0 matched sales: they add no signal data
-        active_counties = sorted(c for c in county_data if county_data[c]["n"] > 0)
+        """Atlas-style signal breakdown table — top-5 counties + Other."""
+        active_counties = display_county_keys
         county_headers = "".join(
             f"<th class='num'>{c.upper()}</th>" for c in active_counties
         )
@@ -625,9 +660,9 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
         for lbl, cnt, pct in sig_summary:
             county_cells = ""
             for county in active_counties:
-                d  = county_data[county]
+                d  = county_display[county]
                 cc = d["all"].get(lbl, 0)
-                county_cells += f"<td class='num'>{cc}&nbsp;({round(cc/d['n']*100)}%)</td>"
+                county_cells += f"<td class='num'>{cc}&nbsp;({round(cc/d['n']*100) if d['n'] else 0}%)</td>"
             rows.append(
                 f"<tr><td>{lbl}</td>"
                 f"<td class='num'>{cnt}</td>"
@@ -649,7 +684,7 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
       </table>"""
 
     def annex_summary_html() -> str:
-        active_counties = sorted(c for c in county_data if county_data[c]["n"] > 0)
+        active_counties = display_county_keys
 
         # --- Signal × County table ---
         county_ths = "".join(
@@ -659,7 +694,7 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
         for lbl, cnt, pct in sig_summary:
             cells = ""
             for county in active_counties:
-                d  = county_data[county]
+                d  = county_display[county]
                 cc = d["all"].get(lbl, 0)
                 cp = round(cc / d["n"] * 100) if d["n"] else 0
                 cells += f"<td class='num'>{cc}<br><span style='color:#888;font-size:9px'>{cp}%</span></td>"
@@ -687,9 +722,9 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
             total_ot = int((adf["OWNER TYPE"].astype(str) == ot).sum())
             cells = ""
             for county in active_counties:
-                grp = adf[adf["COUNTY"] == county]
+                grp = adf[adf["COUNTY"].isin(display_to_counties[county])]
                 cc  = int((grp["OWNER TYPE"].astype(str) == ot).sum())
-                cp  = round(cc / county_data[county]["n"] * 100) if county_data[county]["n"] else 0
+                cp  = round(cc / county_display[county]["n"] * 100) if county_display[county]["n"] else 0
                 cells += f"<td class='num'>{cc}&nbsp;<span style='color:#888;font-size:9px'>({cp}%)</span></td>"
             ot_rows.append(
                 f"<tr><td>{ot}</td>"
@@ -710,9 +745,9 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
             total_n = int(mask.sum())
             cells   = ""
             for county in active_counties:
-                grp  = adf[adf["COUNTY"] == county]
+                grp  = adf[adf["COUNTY"].isin(display_to_counties[county])]
                 cc   = int(mask[grp.index].sum())
-                cp   = round(cc / county_data[county]["n"] * 100) if county_data[county]["n"] else 0
+                cp   = round(cc / county_display[county]["n"] * 100) if county_display[county]["n"] else 0
                 cells += f"<td class='num'>{cc}&nbsp;<span style='color:#888;font-size:9px'>({cp}%)</span></td>"
             return (
                 f"<tr><td>{label}</td>"

@@ -213,6 +213,20 @@ Page 3 uses a two-column layout:
 
 Monthly Sale Volume must always go in the **right column**, below Buyer Type. Never place it below County Breakdown in the left column — the left column is already near capacity with the county table and any zero-county flag boxes. Stacking both tables in the left column causes the page to overflow.
 
+### Many-county reports — top-5 + Other display rule
+
+When the matched-county count is large (e.g. Rapid Fire HB has 31 active counties), every county-iterating table is capped at the **top 5 by sold count**, with the remainder rolled into a single **"Other"** row. This applies to:
+
+- County Breakdown (Page 3, left column) — "Other (N counties)" row at the bottom.
+- Distress Signal Breakdown (signal × county table) — "OTHER" column on the right.
+- Annex tables (Signal × County, Owner Type × County, Signal Stack × County) — same.
+
+The "Other" row aggregates counts and recomputes its own top-3 signals from the combined `all` dict. Totals across columns still sum back to N, so the report stays internally consistent.
+
+This is **purely a display rule** — the underlying analysis (`adf`, `county_data`, `n_matched_counties`, dominant-county selection for Tier 1/Tier 2 recommendations) still uses every individual county. The cap only affects which counties are shown as their own column or row in the report.
+
+Implemented as `display_county_keys` + `county_display` + `display_to_counties` in `generate.py` (computed right after `county_data` is built). To change the cutoff, edit `TOP_N_DISPLAY` near the top of `build_html()`.
+
 ---
 
 ## 10. SOS Home Offers Baseline Numbers (March 2026)
