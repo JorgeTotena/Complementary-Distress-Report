@@ -930,11 +930,6 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
       </div>
     </div>
   </div>
-  <footer class="page-footer">
-    <span><a href="https://8020rei.com">8020rei.com</a></span>
-    <span class="footer-client">{client_name}</span>
-    <span>Page 2</span>
-  </footer>
 </section>
 
 
