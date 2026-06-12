@@ -268,6 +268,18 @@ def build_html(
     all_buybox_counties  = analysis["all_buybox_counties"]
     n                    = len(adf)
 
+    # ---- Action dates — derived from report_date, never hardcoded ----
+    # near_label = the report month (Next Steps "By" column); repeat_label = +6 months
+    # (the "repeat analysis" cadence per protocol). Falls back gracefully if
+    # report_date is a non-standard string.
+    try:
+        _rd = datetime.datetime.strptime(report_date, "%B %Y")
+        near_label = _rd.strftime("%b %Y")
+        _m = _rd.month - 1 + 6
+        repeat_label = datetime.date(_rd.year + _m // 12, _m % 12 + 1, 1).strftime("%b %Y")
+    except ValueError:
+        near_label, repeat_label = report_date, ""
+
     # ---- Signal summary (sorted descending) ----
     sig_summary = sorted(
         [(LABEL_MAP.get(c, c), int(adf[f"{c}_active"].sum()))
@@ -806,7 +818,7 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
         in {"this county" if len(zero_counties) == 1 else "these counties"} during {window_label}.
         {"It" if len(zero_counties) == 1 else "They"} {"is" if len(zero_counties) == 1 else "are"}
         active in {client_poss} BuyBox and included in the distress universe, but produced no
-        transactions to analyse during this window. The repeat analysis scheduled for September 2026
+        transactions to analyse during this window. The repeat analysis scheduled for {repeat_label}
         will clarify whether this reflects a quiet period or a structural gap in that market.</p>
       </div>"""
     else:
@@ -1082,11 +1094,11 @@ ul.bullet-list li { font-size: 0.875rem; margin-bottom: 6px; }
       <table>
         <thead><tr><th>Action</th><th>Owner</th><th>By</th></tr></thead>
         <tbody>
-          <tr><td>Present findings and signal-stack tiers to {client_name}</td><td>CSM</td><td>Apr 2026</td></tr>
-          <tr><td>Configure BuyBox weighting for Tier 1 signal stack</td><td>Client + CSM</td><td>Apr 2026</td></tr>
-          <tr><td>Activate Rapid Response for top counties</td><td>Client</td><td>Apr 2026</td></tr>
-          <tr><td>Evaluate VA capacity for Niche List Tracks A and B</td><td>Client</td><td>Apr 2026</td></tr>
-          <tr><td>Schedule repeat Fulfillment Distress Analysis</td><td>CSM</td><td>Sep 2026</td></tr>
+          <tr><td>Present findings and signal-stack tiers to {client_name}</td><td>CSM</td><td>{near_label}</td></tr>
+          <tr><td>Configure BuyBox weighting for Tier 1 signal stack</td><td>Client + CSM</td><td>{near_label}</td></tr>
+          <tr><td>Activate Rapid Response for top counties</td><td>Client</td><td>{near_label}</td></tr>
+          <tr><td>Evaluate VA capacity for Niche List Tracks A and B</td><td>Client</td><td>{near_label}</td></tr>
+          <tr><td>Schedule repeat Fulfillment Distress Analysis</td><td>CSM</td><td>{repeat_label}</td></tr>
         </tbody>
       </table>
     </div>
